@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copper Finch - Master Prompt Builder</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #0a0a0a; color: #fff; max-width: 600px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; color: #00ffcc; }
+        .hidden { display: none; }
+        .box { background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333; }
+        input { width: 95%; padding: 10px; margin: 10px 0; background: #2a2a2a; color: white; border: 1px solid #444; border-radius: 4px; }
+        button { width: 100%; padding: 15px; background: #00ffcc; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #00ccaa; }
+        #result { background: #222; padding: 15px; border-left: 4px solid #00ffcc; margin-top: 20px; white-space: pre-wrap; line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <h1>Copper Finch Pro</h1>
+    
+    <div id="drm-section" class="box">
+        <h3>Verify Your Purchase</h3>
+        <p>To unlock the Prompt Builder, look at your Copper Finch desk mat.</p>
+        <p>In Section 1 (The AI Decision Matrix), what is the exact word inside the Red Diamond?</p>
+        <input type="text" id="drm-answer" placeholder="Enter the word...">
+        <button onclick="checkDRM()">Unlock Setup</button>
+        <p id="drm-error" style="color: #ff4444; display: none;">Incorrect. Please check your mat and try again.</p>
+    </div>
+
+    <div id="builder-section" class="box hidden">
+        <h3>The 4-Step Prompt Builder</h3>
+        <label>1. ROLE (Who is the AI?)</label>
+        <input type="text" id="role" placeholder="e.g. Expert Copywriter">
+        
+        <label>2. TASK (What must it do?)</label>
+        <input type="text" id="task" placeholder="e.g. Write a sales email">
+        
+        <label>3. CONTEXT (Audience / Goal?)</label>
+        <input type="text" id="context" placeholder="e.g. Launching new software to CEOs">
+        
+        <label>4. FORMAT (How should it look?)</label>
+        <input type="text" id="format" placeholder="e.g. 3 bullet points">
+        
+        <button onclick="generatePrompt()" id="gen-btn">Generate Master Prompt</button>
+        <div id="result" class="hidden"></div>
+    </div>
+
+    <script>
+        function checkDRM() {
+            const answer = document.getElementById('drm-answer').value.trim().toUpperCase();
+            if (answer === 'STOP') {
+                document.getElementById('drm-section').classList.add('hidden');
+                document.getElementById('builder-section').classList.remove('hidden');
+            } else {
+                document.getElementById('drm-error').style.display = 'block';
+            }
+        }
+
+        async function generatePrompt() {
+            const btn = document.getElementById('gen-btn');
+            btn.innerText = "Generating..."; btn.disabled = true;
+
+            const payload = {
+                role: document.getElementById('role').value,
+                task: document.getElementById('task').value,
+                context: document.getElementById('context').value,
+                format: document.getElementById('format').value
+            };
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('result').innerText = data.prompt;
+                    document.getElementById('result').classList.remove('hidden');
+                } else { alert(data.error || "Error generating prompt."); }
+            } catch (error) { alert("Connection error."); }
+            
+            btn.innerText = "Generate Master Prompt"; btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
