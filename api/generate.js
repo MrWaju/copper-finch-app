@@ -36,9 +36,17 @@ Combine and enhance these into one single, highly detailed, expert-level prompt 
     });
     
     const data = await response.json();
+
+    // UPGRADE: If Google rejects us, explicitly tell the front-end WHY!
+    if (!response.ok) {
+       console.error("Google API Error:", data);
+       return res.status(500).json({ error: 'Google says: ' + (data.error?.message || 'Unknown API Error') });
+    }
+
     const resultText = data.candidates[0].content.parts[0].text;
     res.status(200).json({ prompt: resultText });
   } catch (error) {
-    res.status(500).json({ error: 'System failure.' });
+    console.error("Server Crash Error:", error);
+    res.status(500).json({ error: 'Code error: ' + error.message });
   }
 }
