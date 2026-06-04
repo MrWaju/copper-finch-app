@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copper Finch - Master Prompt Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --midnight-slate: #0F172A;
+            --electric-blue: #3B82F6;
+            --deep-steel: #1E293B;
+            --off-white: #F8FAFC;
+            --gray-text: #94A3B8;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--midnight-slate); 
+            color: var(--off-white); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin: 0; 
+            padding: 40px 20px; 
+        }
+        .container { max-width: 600px; width: 100%; }
+        header { text-align: center; margin-bottom: 40px; }
+        header img { max-height: 60px; margin-bottom: 15px; }
+        header p { color: var(--off-white); font-size: 16px; margin: 0; font-weight: 400; }
+        
+        .box { 
+            background-color: var(--midnight-slate); 
+            border: 2px solid var(--deep-steel); 
+            border-radius: 8px; 
+            padding: 30px; 
+            margin-bottom: 20px; 
+        }
+        .hidden { display: none !important; }
+        
+        h2 { font-size: 24px; margin-top: 0; margin-bottom: 15px; }
+        p.verify-text { font-size: 15px; line-height: 1.5; margin-bottom: 20px; }
+        
+        label { display: block; font-size: 14px; font-weight: 600; color: var(--gray-text); margin-top: 20px; margin-bottom: 8px; }
+        input[type="text"] { 
+            width: 100%; box-sizing: border-box; background-color: rgba(0,0,0,0.2); 
+            border: 1px solid var(--deep-steel); color: var(--off-white); 
+            padding: 12px 15px; border-radius: 6px; font-size: 16px; 
+        }
+        input[type="text"]:focus { outline: none; border-color: var(--electric-blue); }
+        
+        button { 
+            width: 100%; background-color: var(--electric-blue); color: #ffffff; 
+            border: none; padding: 16px; border-radius: 6px; font-size: 16px; 
+            font-weight: 600; cursor: pointer; margin-top: 25px; transition: opacity 0.2s; 
+        }
+        button:hover { opacity: 0.9; }
+        button:disabled { background-color: var(--deep-steel); color: var(--gray-text); cursor: not-allowed; }
+        
+        #result-container { margin-top: 30px; }
+        #result { 
+            background: rgba(0,0,0,0.3); padding: 20px; border-left: 4px solid var(--electric-blue); 
+            white-space: pre-wrap; line-height: 1.6; border-radius: 0 8px 8px 0; font-size: 15px;
+        }
+        
+        /* Launchpad Styles */
+        .launchpad-links { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 15px; }
+        .launchpad-links span { color: var(--gray-text); font-size: 14px; }
+        .launchpad-links a { color: var(--off-white); text-decoration: none; font-size: 14px; border: 1px solid var(--deep-steel); padding: 6px 12px; border-radius: 4px; transition: background 0.2s; }
+        .launchpad-links a:hover { background-color: var(--deep-steel); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <img src="logo.png" alt="Copper Finch">
+        <p>Build, save, and deploy elite custom prompts instantly</p>
+    </header>
+
+    <!-- VERIFICATION GATE -->
+    <div id="auth-card" class="box">
+        <h2>Verify Your Purchase</h2>
+        <p class="verify-text">
+            To unlock the Prompt Builder, look at your Copper Finch desk mat. Locate the main heading for <strong>FORMAT (THE OUTPUT)</strong>. What is the FIRST word listed next to the <strong>THINK:</strong> command?
+        </p>
+        <input type="text" id="verify-input" placeholder="Enter the word...">
+        <button onclick="verifyPurchase()">Unlock Setup</button>
+        <p id="error-msg" style="color: #EF4444; font-size: 14px; display: none; margin-top: 15px; text-align: center;">
+            Incorrect. Please check your mat and try again.
+        </p>
+    </div>
+
+    <!-- PROMPT BUILDER -->
+    <div id="builder-section" class="box hidden">
+        <h2 style="color: var(--off-white); text-align: center; font-size: 20px;">The 4-Step Prompt Builder</h2>
+        
+        <label>1. ROLE (Who is the AI?)</label>
+        <input type="text" id="role" placeholder="e.g. Senior Analyst specialising in ROI">
+        
+        <label>2. TASK (What must it do?)</label>
+        <input type="text" id="task" placeholder="e.g. Extract the top 3 strategic insights">
+        
+        <label>3. CONTEXT (Guardrails / Goal?)</label>
+        <input type="text" id="context" placeholder="e.g. Strictly limited to 500 words">
+        
+        <label>4. FORMAT (How should it look?)</label>
+        <input type="text" id="format" placeholder="e.g. Checkbox-style list by priority">
+        
+        <button onclick="generatePrompt()" id="gen-btn">Generate Master Prompt</button>
+        
+        <!-- RESULT & LAUNCHPAD -->
+        <div id="result-container" class="hidden">
+            <div id="result"></div>
+            
+            <button onclick="copyPromptToClipboard()" style="margin-top: 20px;">Copy Prompt to Clipboard</button>
+            
+            <div class="launchpad-links">
+                <span>Launch directly in:</span>
+                <a href="#" onclick="launchAI('https://chatgpt.com')">ChatGPT</a>
+                <a href="#" onclick="launchAI('https://claude.ai/new')">Claude</a>
+                <a href="#" onclick="launchAI('https://gemini.google.com/app')">Gemini</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. The Gatekeeper Logic
+    function verifyPurchase() {
+        const answer = document.getElementById('verify-input').value.trim().toLowerCase();
+        if (answer === 'layout') {
+            document.getElementById('auth-card').classList.add('hidden');
+            document.getElementById('builder-section').classList.remove('hidden');
+        } else {
+            document.getElementById('error-msg').style.display = 'block';
+        }
+    }
+
+    // 2. The Gemini API Call Logic
+    async function generatePrompt() {
+        const btn = document.getElementById('gen-btn');
+        btn.innerText = "Generating..."; 
+        btn.disabled = true;
+
+        const payload = {
+            role: document.getElementById('role').value,
+            task: document.getElementById('task').value,
+            context: document.getElementById('context').value,
+            format: document.getElementById('format').value
+        };
+
+        try {
+            const response = await fetch('/api/generate', {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                document.getElementById('result').innerText = data.prompt;
+                document.getElementById('result-container').classList.remove('hidden');
+            } else { 
+                alert(data.error || "Error generating prompt."); 
+            }
+        } catch (error) { 
+            alert("Connection error. Please try again."); 
+        }
+        
+        btn.innerText = "Generate Master Prompt"; 
+        btn.disabled = false;
+    }
+
+    // 3. The Launchpad Logic
+    function copyPromptToClipboard() {
+        const promptText = document.getElementById('result').innerText;
+        navigator.clipboard.writeText(promptText).then(() => {
+            alert("Prompt copied to clipboard!"); 
+        });
+    }
+
+    function launchAI(aiUrl) {
+        const promptText = document.getElementById('result').innerText;
+        navigator.clipboard.writeText(promptText).then(() => {
+            window.open(aiUrl, '_blank');
+        });
+    }
+</script>
+</body>
+</html>
