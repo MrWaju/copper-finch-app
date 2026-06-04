@@ -25,7 +25,7 @@
         }
         .container { max-width: 600px; width: 100%; }
         header { text-align: center; margin-bottom: 40px; }
-        header img { max-height: 60px; margin-bottom: 15px; }
+        header img { max-height: 95px; margin-bottom: 15px; } /* Increased Logo Size */
         header p { color: var(--off-white); font-size: 16px; margin: 0; font-weight: 400; }
         
         .box { 
@@ -38,9 +38,11 @@
         .hidden { display: none !important; }
         
         h2 { font-size: 24px; margin-top: 0; margin-bottom: 15px; }
-        p.verify-text { font-size: 15px; line-height: 1.5; margin-bottom: 20px; }
+        p.verify-text { font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
         
-        label { display: block; font-size: 14px; font-weight: 600; color: var(--gray-text); margin-top: 20px; margin-bottom: 8px; }
+        label { display: block; font-size: 14px; font-weight: 600; color: var(--off-white); margin-top: 25px; margin-bottom: 4px; }
+        .helper-text { display: block; font-size: 12.5px; color: var(--gray-text); font-style: italic; margin-bottom: 10px; line-height: 1.4; }
+        
         input[type="text"] { 
             width: 100%; box-sizing: border-box; background-color: rgba(0,0,0,0.2); 
             border: 1px solid var(--deep-steel); color: var(--off-white); 
@@ -62,7 +64,6 @@
             white-space: pre-wrap; line-height: 1.6; border-radius: 0 8px 8px 0; font-size: 15px;
         }
         
-        /* Launchpad Styles */
         .launchpad-links { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 15px; }
         .launchpad-links span { color: var(--gray-text); font-size: 14px; }
         .launchpad-links a { color: var(--off-white); text-decoration: none; font-size: 14px; border: 1px solid var(--deep-steel); padding: 6px 12px; border-radius: 4px; transition: background 0.2s; }
@@ -77,43 +78,42 @@
         <p>Build, save, and deploy elite custom prompts instantly</p>
     </header>
 
-    <!-- VERIFICATION GATE -->
     <div id="auth-card" class="box">
         <h2>Verify Your Purchase</h2>
         <p class="verify-text">
-            To unlock the Prompt Builder, look at your Copper Finch desk mat. Locate the main heading for <strong>FORMAT (THE OUTPUT)</strong>. What is the FIRST word listed next to the <strong>THINK:</strong> command?
+            To unlock the Prompt Builder, look at your Copper Finch desk mat. Locate the main heading for <strong style="color: var(--electric-blue);">FORMAT (THE OUTPUT)</strong>. What is the FIRST word listed next to the <strong style="color: var(--electric-blue);">THINK:</strong> command?
         </p>
         <input type="text" id="verify-input" placeholder="Enter the word...">
-        <button onclick="verifyPurchase()">Unlock Setup</button>
+        <button onclick="verifyPurchase()">Access Prompt Builder</button>
         <p id="error-msg" style="color: #EF4444; font-size: 14px; display: none; margin-top: 15px; text-align: center;">
             Incorrect. Please check your mat and try again.
         </p>
     </div>
 
-    <!-- PROMPT BUILDER -->
     <div id="builder-section" class="box hidden">
         <h2 style="color: var(--off-white); text-align: center; font-size: 20px;">The 4-Step Prompt Builder</h2>
         
-        <label>1. ROLE (Who is the AI?)</label>
+        <label>1. ROLE (The Persona)</label>
+        <span class="helper-text">ASK YOURSELF: What elite professional is uniquely qualified to solve this? How would they speak?</span>
         <input type="text" id="role" placeholder="e.g. Senior Analyst specialising in ROI">
         
-        <label>2. TASK (What must it do?)</label>
+        <label>2. TASK (The Action)</label>
+        <span class="helper-text">ASK YOURSELF: What exact mechanical action must the AI perform? What is the undeniable end-goal?</span>
         <input type="text" id="task" placeholder="e.g. Extract the top 3 strategic insights">
         
-        <label>3. CONTEXT (Guardrails / Goal?)</label>
-        <input type="text" id="context" placeholder="e.g. Strictly limited to 500 words">
+        <label>3. CONTEXT (The Guardrails)</label>
+        <span class="helper-text">ASK YOURSELF: What background details would a human need to not fail this task?</span>
+        <input type="text" id="context" placeholder="e.g. Strictly limited to 500 words for a non-technical audience">
         
-        <label>4. FORMAT (How should it look?)</label>
-        <input type="text" id="format" placeholder="e.g. Checkbox-style list by priority">
+        <label>4. FORMAT (The Output)</label>
+        <span class="helper-text">ASK YOURSELF: How do I want to consume this information? What layout allows me to copy/paste immediately?</span>
+        <input type="text" id="format" placeholder="e.g. Checkbox-style list organized by priority">
         
         <button onclick="generatePrompt()" id="gen-btn">Generate Master Prompt</button>
         
-        <!-- RESULT & LAUNCHPAD -->
         <div id="result-container" class="hidden">
             <div id="result"></div>
-            
             <button onclick="copyPromptToClipboard()" style="margin-top: 20px;">Copy Prompt to Clipboard</button>
-            
             <div class="launchpad-links">
                 <span>Launch directly in:</span>
                 <a href="#" onclick="launchAI('https://chatgpt.com')">ChatGPT</a>
@@ -125,7 +125,14 @@
 </div>
 
 <script>
-    // 1. The Gatekeeper Logic
+    // Enter Key Listener for Login
+    document.getElementById('verify-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            verifyPurchase();
+        }
+    });
+
+    // Verification Logic
     function verifyPurchase() {
         const answer = document.getElementById('verify-input').value.trim().toLowerCase();
         if (answer === 'layout') {
@@ -136,18 +143,24 @@
         }
     }
 
-    // 2. The Gemini API Call Logic
+    // AI Generation Logic (With Mandatory Field Validation)
     async function generatePrompt() {
+        const roleVal = document.getElementById('role').value.trim();
+        const taskVal = document.getElementById('task').value.trim();
+        const contextVal = document.getElementById('context').value.trim();
+        const formatVal = document.getElementById('format').value.trim();
+
+        // 1. Mandatory Field Check
+        if (!roleVal || !taskVal || !contextVal || !formatVal) {
+            alert("All 4 fields are mandatory to engineer an elite prompt. Please complete any missing sections.");
+            return;
+        }
+
         const btn = document.getElementById('gen-btn');
         btn.innerText = "Generating..."; 
         btn.disabled = true;
 
-        const payload = {
-            role: document.getElementById('role').value,
-            task: document.getElementById('task').value,
-            context: document.getElementById('context').value,
-            format: document.getElementById('format').value
-        };
+        const payload = { role: roleVal, task: taskVal, context: contextVal, format: formatVal };
 
         try {
             const response = await fetch('/api/generate', {
@@ -161,17 +174,18 @@
                 document.getElementById('result').innerText = data.prompt;
                 document.getElementById('result-container').classList.remove('hidden');
             } else { 
-                alert(data.error || "Error generating prompt."); 
+                // Professional Error Handling for API Overload
+                alert("Network timeout. The AI servers are currently processing heavy load. Please wait 10 seconds and try again."); 
             }
         } catch (error) { 
-            alert("Connection error. Please try again."); 
+            alert("Connection error. Please check your internet connection and try again."); 
         }
         
         btn.innerText = "Generate Master Prompt"; 
         btn.disabled = false;
     }
 
-    // 3. The Launchpad Logic
+    // Launchpad Logic
     function copyPromptToClipboard() {
         const promptText = document.getElementById('result').innerText;
         navigator.clipboard.writeText(promptText).then(() => {
