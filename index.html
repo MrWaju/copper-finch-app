@@ -25,7 +25,7 @@
         }
         .container { max-width: 600px; width: 100%; }
         header { text-align: center; margin-bottom: 40px; }
-        header img { max-height: 95px; margin-bottom: 15px; } /* Increased Logo Size */
+        header img { max-height: 95px; margin-bottom: 15px; } 
         header p { color: var(--off-white); font-size: 16px; margin: 0; font-weight: 400; }
         
         .box { 
@@ -40,15 +40,26 @@
         h2 { font-size: 24px; margin-top: 0; margin-bottom: 15px; }
         p.verify-text { font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
         
-        label { display: block; font-size: 14px; font-weight: 600; color: var(--off-white); margin-top: 25px; margin-bottom: 4px; }
+        .input-header { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 25px; margin-bottom: 4px; }
+        label { font-size: 14px; font-weight: 600; color: var(--off-white); }
+        .char-counter { font-size: 12px; color: var(--gray-text); font-weight: 400; transition: color 0.2s; }
+        .char-counter.near-limit { color: #F59E0B; } /* Warning yellow */
+        .char-counter.at-limit { color: #EF4444; } /* Error red */
+        
         .helper-text { display: block; font-size: 12.5px; color: var(--gray-text); font-style: italic; margin-bottom: 10px; line-height: 1.4; }
         
-        input[type="text"] { 
+        input[type="text"], textarea { 
             width: 100%; box-sizing: border-box; background-color: rgba(0,0,0,0.2); 
             border: 1px solid var(--deep-steel); color: var(--off-white); 
-            padding: 12px 15px; border-radius: 6px; font-size: 16px; 
+            padding: 12px 15px; border-radius: 6px; font-size: 16px; font-family: 'Inter', sans-serif;
         }
-        input[type="text"]:focus { outline: none; border-color: var(--electric-blue); }
+        input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--electric-blue); }
+        
+        textarea {
+            resize: vertical; 
+            min-height: 80px;
+            line-height: 1.5;
+        }
         
         button { 
             width: 100%; background-color: var(--electric-blue); color: #ffffff; 
@@ -78,6 +89,7 @@
         <p>Build, save, and deploy elite custom prompts instantly</p>
     </header>
 
+    <!-- VERIFICATION GATE -->
     <div id="auth-card" class="box">
         <h2>Verify Your Purchase</h2>
         <p class="verify-text">
@@ -90,27 +102,45 @@
         </p>
     </div>
 
+    <!-- PROMPT BUILDER -->
     <div id="builder-section" class="box hidden">
         <h2 style="color: var(--off-white); text-align: center; font-size: 20px;">The 4-Step Prompt Builder</h2>
         
-        <label>1. ROLE (The Persona)</label>
+        <!-- Field 1: ROLE (Short) -->
+        <div class="input-header">
+            <label>1. ROLE (The Persona)</label>
+            <span class="char-counter" id="role-count">0 / 300</span>
+        </div>
         <span class="helper-text">ASK YOURSELF: What elite professional is uniquely qualified to solve this? How would they speak?</span>
-        <input type="text" id="role" placeholder="e.g. Senior Analyst specialising in ROI">
+        <textarea id="role" maxlength="300" placeholder="e.g. Senior Analyst specialising in ROI"></textarea>
         
-        <label>2. TASK (The Action)</label>
+        <!-- Field 2: TASK (Long) -->
+        <div class="input-header">
+            <label>2. TASK (The Action)</label>
+            <span class="char-counter" id="task-count">0 / 1000</span>
+        </div>
         <span class="helper-text">ASK YOURSELF: What exact mechanical action must the AI perform? What is the undeniable end-goal?</span>
-        <input type="text" id="task" placeholder="e.g. Extract the top 3 strategic insights">
+        <textarea id="task" maxlength="1000" placeholder="e.g. Extract the top 3 strategic insights"></textarea>
         
-        <label>3. CONTEXT (The Guardrails)</label>
+        <!-- Field 3: CONTEXT (Long) -->
+        <div class="input-header">
+            <label>3. CONTEXT (The Guardrails)</label>
+            <span class="char-counter" id="context-count">0 / 1000</span>
+        </div>
         <span class="helper-text">ASK YOURSELF: What background details would a human need to not fail this task?</span>
-        <input type="text" id="context" placeholder="e.g. Strictly limited to 500 words for a non-technical audience">
+        <textarea id="context" maxlength="1000" placeholder="e.g. Strictly limited to 500 words for a non-technical audience"></textarea>
         
-        <label>4. FORMAT (The Output)</label>
+        <!-- Field 4: FORMAT (Short) -->
+        <div class="input-header">
+            <label>4. FORMAT (The Output)</label>
+            <span class="char-counter" id="format-count">0 / 300</span>
+        </div>
         <span class="helper-text">ASK YOURSELF: How do I want to consume this information? What layout allows me to copy/paste immediately?</span>
-        <input type="text" id="format" placeholder="e.g. Checkbox-style list organized by priority">
+        <textarea id="format" maxlength="300" placeholder="e.g. Checkbox-style list organized by priority"></textarea>
         
         <button onclick="generatePrompt()" id="gen-btn">Generate Master Prompt</button>
         
+        <!-- RESULT & LAUNCHPAD -->
         <div id="result-container" class="hidden">
             <div id="result"></div>
             <button onclick="copyPromptToClipboard()" style="margin-top: 20px;">Copy Prompt to Clipboard</button>
@@ -125,6 +155,31 @@
 </div>
 
 <script>
+    // Dynamic Character Counter Logic (Calculates percentages)
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            const countSpan = document.getElementById(this.id + '-count');
+            const currentLength = this.value.length;
+            const maxLength = parseInt(this.getAttribute('maxlength'));
+            
+            countSpan.innerText = `${currentLength} / ${maxLength}`;
+            
+            const usagePercentage = currentLength / maxLength;
+            
+            // Visual warnings at 80% and 95% capacity
+            if (usagePercentage >= 0.95) {
+                countSpan.classList.add('at-limit');
+                countSpan.classList.remove('near-limit');
+            } else if (usagePercentage >= 0.80) {
+                countSpan.classList.add('near-limit');
+                countSpan.classList.remove('at-limit');
+            } else {
+                countSpan.classList.remove('near-limit', 'at-limit');
+            }
+        });
+    });
+
     // Enter Key Listener for Login
     document.getElementById('verify-input').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
@@ -143,14 +198,13 @@
         }
     }
 
-    // AI Generation Logic (With Mandatory Field Validation)
+    // AI Generation Logic
     async function generatePrompt() {
         const roleVal = document.getElementById('role').value.trim();
         const taskVal = document.getElementById('task').value.trim();
         const contextVal = document.getElementById('context').value.trim();
         const formatVal = document.getElementById('format').value.trim();
 
-        // 1. Mandatory Field Check
         if (!roleVal || !taskVal || !contextVal || !formatVal) {
             alert("All 4 fields are mandatory to engineer an elite prompt. Please complete any missing sections.");
             return;
@@ -174,7 +228,6 @@
                 document.getElementById('result').innerText = data.prompt;
                 document.getElementById('result-container').classList.remove('hidden');
             } else { 
-                // Professional Error Handling for API Overload
                 alert("Network timeout. The AI servers are currently processing heavy load. Please wait 10 seconds and try again."); 
             }
         } catch (error) { 
