@@ -1,257 +1,501 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Copper Finch - Master Prompt Builder</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --midnight-slate: #0F172A;
-            --electric-blue: #3B82F6;
-            --deep-steel: #1E293B;
-            --off-white: #F8FAFC;
-            --gray-text: #94A3B8;
-        }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--midnight-slate); 
-            color: var(--off-white); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            margin: 0; 
-            padding: 40px 20px; 
-        }
-        .container { max-width: 600px; width: 100%; }
-        header { text-align: center; margin-bottom: 40px; }
-        header img { max-height: 95px; margin-bottom: 15px; } 
-        header p { color: var(--off-white); font-size: 16px; margin: 0; font-weight: 400; }
-        
-        .box { 
-            background-color: var(--midnight-slate); 
-            border: 2px solid var(--deep-steel); 
-            border-radius: 8px; 
-            padding: 30px; 
-            margin-bottom: 20px; 
-        }
-        .hidden { display: none !important; }
-        
-        h2 { font-size: 24px; margin-top: 0; margin-bottom: 15px; }
-        p.verify-text { font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
-        
-        .input-header { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 25px; margin-bottom: 4px; }
-        label { font-size: 14px; font-weight: 600; color: var(--off-white); }
-        .char-counter { font-size: 12px; color: var(--gray-text); font-weight: 400; transition: color 0.2s; }
-        .char-counter.near-limit { color: #F59E0B; } /* Warning yellow */
-        .char-counter.at-limit { color: #EF4444; } /* Error red */
-        
-        .helper-text { display: block; font-size: 12.5px; color: var(--gray-text); font-style: italic; margin-bottom: 10px; line-height: 1.4; }
-        
-        input[type="text"], textarea { 
-            width: 100%; box-sizing: border-box; background-color: rgba(0,0,0,0.2); 
-            border: 1px solid var(--deep-steel); color: var(--off-white); 
-            padding: 12px 15px; border-radius: 6px; font-size: 16px; font-family: 'Inter', sans-serif;
-        }
-        input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--electric-blue); }
-        
-        textarea {
-            resize: vertical; 
-            min-height: 80px;
-            line-height: 1.5;
-        }
-        
-        button { 
-            width: 100%; background-color: var(--electric-blue); color: #ffffff; 
-            border: none; padding: 16px; border-radius: 6px; font-size: 16px; 
-            font-weight: 600; cursor: pointer; margin-top: 25px; transition: opacity 0.2s; 
-        }
-        button:hover { opacity: 0.9; }
-        button:disabled { background-color: var(--deep-steel); color: var(--gray-text); cursor: not-allowed; }
-        
-        #result-container { margin-top: 30px; }
-        #result { 
-            background: rgba(0,0,0,0.3); padding: 20px; border-left: 4px solid var(--electric-blue); 
-            white-space: pre-wrap; line-height: 1.6; border-radius: 0 8px 8px 0; font-size: 15px;
-        }
-        
-        .launchpad-links { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 15px; }
-        .launchpad-links span { color: var(--gray-text); font-size: 14px; }
-        .launchpad-links a { color: var(--off-white); text-decoration: none; font-size: 14px; border: 1px solid var(--deep-steel); padding: 6px 12px; border-radius: 4px; transition: background 0.2s; }
-        .launchpad-links a:hover { background-color: var(--deep-steel); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copper Finch — AI Prompt Constructor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --midnight-slate:#0F172A;
+    --electric-blue:#3B82F6;
+    --deep-steel:#1E293B;
+    --off-white:#F8FAFC;
+    --gray-text:#94A3B8;
+    --copper:#C6794D;
+    --green:#34D399;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:'Inter',sans-serif;background:var(--midnight-slate);color:var(--off-white);
+    display:flex;flex-direction:column;align-items:center;margin:0;padding:40px 16px;
+  }
+  .container{max-width:640px;width:100%}
+  header{text-align:center;margin-bottom:32px}
+  header img{max-height:90px;margin-bottom:12px}
+  .logo-fallback{font-size:24px;font-weight:700;letter-spacing:3px;margin-bottom:10px}
+  .logo-fallback span{color:var(--electric-blue)}
+  header p{color:var(--gray-text);font-size:15px;margin:0}
+
+  .box{background:var(--midnight-slate);border:2px solid var(--deep-steel);border-radius:8px;padding:28px;margin-bottom:20px}
+  .hidden{display:none !important}
+  h2{font-size:22px;margin:0 0 14px}
+
+  label{font-size:14px;font-weight:600;display:block}
+  .input-header{display:flex;justify-content:space-between;align-items:flex-end;margin:24px 0 4px}
+  .char-counter{font-size:12px;color:var(--gray-text)}
+  .char-counter.near-limit{color:#F59E0B}
+  .char-counter.at-limit{color:#EF4444}
+  .helper-text{display:block;font-size:12.5px;color:var(--gray-text);font-style:italic;margin-bottom:9px;line-height:1.45}
+
+  input[type=text],textarea,select{
+    width:100%;background:rgba(0,0,0,.2);border:1px solid var(--deep-steel);color:var(--off-white);
+    padding:12px 14px;border-radius:6px;font-size:16px;font-family:'Inter',sans-serif;
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--electric-blue)}
+  textarea{resize:vertical;min-height:78px;line-height:1.5}
+  select{cursor:pointer}
+  .field-flash{border-color:var(--copper) !important;transition:border-color .1s}
+
+  button{
+    width:100%;background:var(--electric-blue);color:#fff;border:none;padding:15px;border-radius:6px;
+    font-size:16px;font-weight:600;cursor:pointer;margin-top:22px;transition:opacity .2s;
+  }
+  button:hover{opacity:.9}
+  button:disabled{background:var(--deep-steel);color:var(--gray-text);cursor:not-allowed}
+  button.secondary{background:transparent;border:1px solid var(--copper);color:var(--copper)}
+  button.secondary:hover{background:rgba(198,121,77,.1);opacity:1}
+  button.ghost{background:transparent;border:1px solid var(--deep-steel);color:var(--gray-text);font-size:14px;padding:11px}
+
+  .library-strip{background:rgba(198,121,77,.07);border:1px solid rgba(198,121,77,.3);border-radius:6px;padding:16px;margin-bottom:6px}
+  .library-strip label{color:var(--copper);margin-bottom:4px}
+  .code-chip{
+    display:inline-block;background:rgba(198,121,77,.15);color:var(--copper);
+    border:1px solid rgba(198,121,77,.4);border-radius:4px;padding:1px 7px;
+    font-size:11.5px;font-weight:700;margin-right:7px;letter-spacing:.5px;
+  }
+  .optional{font-weight:400;color:var(--gray-text);font-size:12.5px}
+
+  /* result area */
+  #result-container{margin-top:28px}
+  .result-tabs{display:flex;gap:8px;margin-bottom:10px}
+  .result-tab{
+    flex:1;text-align:center;padding:9px;border-radius:6px;cursor:pointer;font-size:13.5px;font-weight:600;
+    background:rgba(0,0,0,.2);border:1px solid var(--deep-steel);color:var(--gray-text);transition:all .2s;
+  }
+  .result-tab.active{background:var(--deep-steel);color:var(--off-white);border-color:var(--electric-blue)}
+  .result-tab.disabled{opacity:.4;cursor:not-allowed}
+  #result{
+    background:rgba(0,0,0,.3);padding:18px;border-left:4px solid var(--electric-blue);
+    line-height:1.6;border-radius:0 8px 8px 0;font-size:15px;min-height:150px;width:100%;
+    color:var(--off-white);font-family:'Inter',sans-serif;resize:vertical;
+  }
+  #result.sharpened{border-left-color:var(--copper)}
+  .result-note{font-size:12.5px;color:var(--gray-text);margin:8px 2px 0;font-style:italic}
+  .quota-note{font-size:12px;color:var(--gray-text);text-align:center;margin:8px 0 0}
+  #copy-confirm{color:var(--green);font-size:14px;text-align:center;margin-top:12px;display:none}
+  #ai-error{color:#F59E0B;font-size:13.5px;text-align:center;margin-top:12px;display:none;line-height:1.5}
+
+  .launchpad{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+  .launchpad span{color:var(--gray-text);font-size:14px}
+  .launchpad a{color:var(--off-white);text-decoration:none;font-size:14px;border:1px solid var(--deep-steel);padding:6px 12px;border-radius:4px}
+  .launchpad a:hover{background:var(--deep-steel)}
+  footer{text-align:center;color:var(--gray-text);font-size:12px;margin-top:24px}
+</style>
 </head>
 <body>
-
 <div class="container">
-    <header>
-        <img src="Copper Finch Logo PGN.png" alt="Copper Finch">
-        <p>Build, save, and deploy elite custom prompts instantly</p>
-    </header>
 
-    <!-- VERIFICATION GATE -->
-    <div id="auth-card" class="box">
-        <h2>Verify Your Purchase</h2>
-        <p class="verify-text">
-            To unlock the Prompt Builder, look at your Copper Finch desk mat. Locate the main heading for <strong style="color: var(--electric-blue);">FORMAT (THE OUTPUT)</strong>. What is the FIRST word listed next to the <strong style="color: var(--electric-blue);">THINK:</strong> command?
-        </p>
-        <input type="text" id="verify-input" placeholder="Enter the word...">
-        <button onclick="verifyPurchase()">Access Prompt Builder</button>
-        <p id="error-msg" style="color: #EF4444; font-size: 14px; display: none; margin-top: 15px; text-align: center;">
-            Incorrect. Please check your mat and try again.
-        </p>
+  <header>
+    <img src="copper-finch-logo.png" alt="Copper Finch"
+         onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='block';">
+    <div id="logo-fallback" class="logo-fallback" style="display:none">COPPER<span>FINCH</span></div>
+    <p>From desk to screen</p>
+  </header>
+
+  <!-- ============ ACCESS GATE ============ -->
+  <div id="auth-card" class="box">
+    <h2>Unlock the Constructor</h2>
+    <p style="font-size:15px;line-height:1.6;margin-bottom:18px">
+      Look at your Copper Finch mat. Find the heading
+      <strong style="color:var(--electric-blue)">FORMAT (THE OUTPUT)</strong>.
+      What is the first word listed next to <strong style="color:var(--electric-blue)">THINK:</strong>?
+    </p>
+    <input type="text" id="verify-input" placeholder="Enter the word…" autocomplete="off">
+    <button onclick="verifyPurchase()">Unlock</button>
+    <p id="error-msg" style="color:#EF4444;font-size:14px;display:none;margin-top:14px;text-align:center">
+      That's not the word on the mat. Check the FORMAT column and try again.
+    </p>
+  </div>
+
+  <!-- ============ CONSTRUCTOR ============ -->
+  <div id="builder" class="box hidden">
+
+    <!-- Library prefill -->
+    <div class="library-strip">
+      <label>Start from the Library <span class="optional">— optional</span></label>
+      <span class="helper-text" style="margin-bottom:8px">Pick a ready-made prompt and it fills all four boxes below. Edit anything you like.</span>
+      <select id="lib-select" onchange="prefillFromLibrary()"></select>
     </div>
 
-    <!-- PROMPT BUILDER -->
-    <div id="builder-section" class="box hidden">
-        <h2 style="color: var(--off-white); text-align: center; font-size: 20px;">The 4-Step Prompt Builder</h2>
-        
-        <!-- Field 1: ROLE (Short) -->
-        <div class="input-header">
-            <label>1. ROLE (The Persona)</label>
-            <span class="char-counter" id="role-count">0 / 300</span>
-        </div>
-        <span class="helper-text">ASK YOURSELF: What elite professional is uniquely qualified to solve this? How would they speak?</span>
-        <textarea id="role" maxlength="300" placeholder="e.g. Senior Analyst specialising in ROI"></textarea>
-        
-        <!-- Field 2: TASK (Long) -->
-        <div class="input-header">
-            <label>2. TASK (The Action)</label>
-            <span class="char-counter" id="task-count">0 / 1000</span>
-        </div>
-        <span class="helper-text">ASK YOURSELF: What exact mechanical action must the AI perform? What is the undeniable end-goal?</span>
-        <textarea id="task" maxlength="1000" placeholder="e.g. Extract the top 3 strategic insights"></textarea>
-        
-        <!-- Field 3: CONTEXT (Long) -->
-        <div class="input-header">
-            <label>3. CONTEXT (The Background)</label>
-            <span class="char-counter" id="context-count">0 / 1000</span>
-        </div>
-        <span class="helper-text">ASK YOURSELF: What background details would a human need to not fail this task? Who is reading the final result?</span>
-        <textarea id="context" maxlength="1000" placeholder="e.g. Strictly limited to 500 words for a non-technical audience"></textarea>
-        
-        <!-- Field 4: FORMAT (Short) -->
-        <div class="input-header">
-            <label>4. FORMAT (The Output)</label>
-            <span class="char-counter" id="format-count">0 / 300</span>
-        </div>
-        <span class="helper-text">ASK YOURSELF: How do I want to consume this information? What layout allows me to copy/paste immediately?</span>
-        <textarea id="format" maxlength="300" placeholder="e.g. Checkbox-style list organized by priority"></textarea>
-        
-        <button onclick="generatePrompt()" id="gen-btn">Generate Master Prompt</button>
-        
-        <!-- RESULT & LAUNCHPAD -->
-        <div id="result-container" class="hidden">
-            <div id="result"></div>
-            <button onclick="copyPromptToClipboard()" style="margin-top: 20px;">Copy Prompt to Clipboard</button>
-            <div class="launchpad-links">
-                <span>Launch directly in:</span>
-                <a href="#" onclick="launchAI('https://chatgpt.com')">ChatGPT</a>
-                <a href="#" onclick="launchAI('https://claude.ai/new')">Claude</a>
-                <a href="#" onclick="launchAI('https://gemini.google.com/app')">Gemini</a>
-            </div>
-        </div>
+    <!-- 1 ROLE -->
+    <div class="input-header">
+      <label>1. ROLE <span class="optional">(The Persona)</span></label>
+      <span class="char-counter" id="role-count">0 / 300</span>
     </div>
+    <span class="helper-text">ASK YOURSELF: What elite professional is uniquely qualified to solve this? How would they speak?</span>
+    <textarea id="role" maxlength="300" placeholder="e.g. Senior Analyst specialising in ROI"></textarea>
+    <div class="input-header" style="margin-top:10px">
+      <label><span class="code-chip">P</span>Add a Perspective <span class="optional">— optional</span></label>
+    </div>
+    <select id="boost-p" onchange="applyBooster('p')"></select>
+
+    <!-- 2 TASK -->
+    <div class="input-header">
+      <label>2. TASK <span class="optional">(The Action)</span></label>
+      <span class="char-counter" id="task-count">0 / 1000</span>
+    </div>
+    <span class="helper-text">ASK YOURSELF: What exact mechanical action must the AI perform? What is the undeniable end-goal?</span>
+    <textarea id="task" maxlength="1000" placeholder="e.g. Extract the top 3 strategic insights"></textarea>
+
+    <!-- 3 CONTEXT -->
+    <div class="input-header">
+      <label>3. CONTEXT <span class="optional">(The Background)</span></label>
+      <span class="char-counter" id="context-count">0 / 1000</span>
+    </div>
+    <span class="helper-text">ASK YOURSELF: What background details would a human need to not fail this task? Who is reading the final result?</span>
+    <textarea id="context" maxlength="1000" placeholder="e.g. Strictly limited to 500 words for a non-technical audience"></textarea>
+    <div class="input-header" style="margin-top:10px">
+      <label><span class="code-chip">T</span>Set the Tone <span class="optional">— optional</span></label>
+    </div>
+    <select id="boost-t" onchange="applyBooster('t')"></select>
+
+    <!-- 4 FORMAT -->
+    <div class="input-header">
+      <label>4. FORMAT <span class="optional">(The Output)</span></label>
+      <span class="char-counter" id="format-count">0 / 300</span>
+    </div>
+    <span class="helper-text">ASK YOURSELF: How do I want to consume this information? What layout allows me to copy/paste immediately?</span>
+    <textarea id="format" maxlength="300" placeholder="e.g. Checkbox-style list organised by priority"></textarea>
+    <div class="input-header" style="margin-top:10px">
+      <label><span class="code-chip">F</span>Choose a Format <span class="optional">— optional</span></label>
+    </div>
+    <select id="boost-f" onchange="applyBooster('f')"></select>
+
+    <button onclick="buildPrompt()" id="build-btn">Build my prompt</button>
+
+    <!-- RESULT -->
+    <div id="result-container" class="hidden">
+      <div class="result-tabs">
+        <div class="result-tab active" id="tab-yours" onclick="showVersion('yours')">Your prompt</div>
+        <div class="result-tab disabled" id="tab-sharp" onclick="showVersion('sharp')">Sharpened</div>
+      </div>
+      <textarea id="result" spellcheck="false"></textarea>
+      <p class="result-note">Anything in [square brackets] is yours to replace. Edit it here, then copy.</p>
+
+      <button onclick="sharpenWithAI()" id="sharpen-btn" class="secondary">Sharpen with AI</button>
+      <p class="quota-note" id="quota-note">AI sharpening is limited to 10 per hour to keep this tool free for everyone.</p>
+      <p id="ai-error"></p>
+
+      <button onclick="copyPrompt()">Copy prompt</button>
+      <p id="copy-confirm">Copied. Now paste it into your AI chat (Ctrl+V, or &#8984;V on Mac).</p>
+
+      <div class="launchpad">
+        <span>Or open:</span>
+        <a href="https://chatgpt.com" target="_blank" rel="noopener" onclick="copyPrompt()">ChatGPT</a>
+        <a href="https://claude.ai/new" target="_blank" rel="noopener" onclick="copyPrompt()">Claude</a>
+        <a href="https://gemini.google.com/app" target="_blank" rel="noopener" onclick="copyPrompt()">Gemini</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>Copper Finch · builder.thecopperfinch.com</footer>
 </div>
 
 <script>
-    // Dynamic Character Counter Logic (Calculates percentages)
-    const textareas = document.querySelectorAll('textarea');
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            const countSpan = document.getElementById(this.id + '-count');
-            const currentLength = this.value.length;
-            const maxLength = parseInt(this.getAttribute('maxlength'));
-            
-            countSpan.innerText = `${currentLength} / ${maxLength}`;
-            
-            const usagePercentage = currentLength / maxLength;
-            
-            // Visual warnings at 80% and 95% capacity
-            if (usagePercentage >= 0.95) {
-                countSpan.classList.add('at-limit');
-                countSpan.classList.remove('near-limit');
-            } else if (usagePercentage >= 0.80) {
-                countSpan.classList.add('near-limit');
-                countSpan.classList.remove('at-limit');
-            } else {
-                countSpan.classList.remove('near-limit', 'at-limit');
-            }
-        });
+/* =====================================================================
+   MAT CONTENT — edit here to change any prompt or booster.
+   Codes match the printed mat (W/U/R Library, P/T/F Boosters).
+   ===================================================================== */
+const LIBRARY = {
+  "WRITE": [
+    {code:"W1",label:"Reply to an email",
+     role:"me, in my professional position",
+     task:"reply to the email below to achieve [desired outcome]",
+     context:"Key facts they need to know: [insert]. Email:\n[paste the email here]",
+     format:"Max 120 words. Warm but firm."},
+    {code:"W2",label:"Draft a document",
+     role:"a senior [profession, e.g. B2B copywriter]",
+     task:"draft a [document type] for [audience]",
+     context:"The one problem it must solve: [insert]",
+     format:"Lead with the point. Cut every wasted word. Length: [insert]."},
+    {code:"W3",label:"Build a presentation",
+     role:"a presentation coach",
+     task:"turn my notes below into a [number]-slide outline",
+     context:"Audience: [insert]. What they must do afterwards: [insert]. Notes:\n[paste your notes here]",
+     format:"Title plus three supporting bullets per slide."},
+    {code:"W4",label:"Generate ideas",
+     role:"an unconventional [industry] strategist",
+     task:"give me [number] genuinely distinct ways to solve [problem or goal]",
+     context:"What I have already tried: [insert]",
+     format:"One line each, plus its single biggest risk."}
+  ],
+  "UNDERSTAND & DECIDE": [
+    {code:"U1",label:"Turn a meeting into actions",
+     role:"my Chief of Staff",
+     task:"extract the decisions made and every action item from the notes below",
+     context:"Notes:\n[paste the notes here]",
+     format:"A table with columns: owner, task, deadline."},
+    {code:"U2",label:"Summarise anything long",
+     role:"my Chief of Staff",
+     task:"extract only the three insights that matter most for [my goal]",
+     context:"Text:\n[paste the text here]",
+     format:"Bullet points only. No preamble."},
+    {code:"U3",label:"Make a decision",
+     role:"an elite management consultant",
+     task:"analyse the trade-offs and tell me which to choose",
+     context:"I must choose between [Option A] and [Option B] for [goal]. Key constraint: [e.g. budget].",
+     format:"A comparison table, followed by a definitive verdict."},
+    {code:"U4",label:"Get up to speed fast",
+     role:"an expert researcher in the field",
+     task:"brief me on the three leading trends in [topic]",
+     context:"I am asking because [reason]",
+     format:"One tight paragraph each, plus the single strongest counter-argument."}
+  ],
+  "REWORK": [
+    {code:"R1",label:"Polish a draft",
+     role:"a ruthless editor",
+     task:"rewrite the draft below to be [clearer / more authoritative]",
+     context:"Audience: [insert]. Draft:\n[paste your draft here]",
+     format:"Keep every fact intact. Return the final text only."},
+    {code:"R2",label:"Repurpose content",
+     role:"a digital marketer",
+     task:"turn the content below into [e.g. a LinkedIn post, an email and a thread]",
+     context:"Brand voice: [insert]. Content:\n[paste your content here]",
+     format:"One consistent voice, ready to publish."},
+    {code:"R3",label:"Explain something complex",
+     role:"a master teacher",
+     task:"explain [topic] to me",
+     context:"My level: [e.g. complete beginner]",
+     format:"Everyday analogies, then a step-by-step checklist."},
+    {code:"R4",label:"Give feedback on work",
+     role:"an honest but supportive [manager / mentor]",
+     task:"review the work below and assess it properly",
+     context:"Criteria or goal: [insert]. Work:\n[paste the work here]",
+     format:"Top three strengths, then top three fixes."}
+  ]
+};
+
+const BOOSTERS = {
+  p:[{code:"P1",label:"Specialist",text:"a senior specialist in this exact field"},
+     {code:"P2",label:"Challenger",text:"a ruthless devil's advocate who stress-tests the logic and exposes blind spots"},
+     {code:"P3",label:"Mentor",text:"a veteran mentor who asks probing questions rather than doing the work for me"},
+     {code:"P4",label:"Disruptor",text:"an unconventional innovator who ignores standard practice"},
+     {code:"P5",label:"Simplifier",text:"a subject matter expert who explains things to beginners with analogies and zero jargon"}],
+  t:[{code:"T1",label:"Direct",text:"Tone: direct and concise. Zero fluff, strictly useful."},
+     {code:"T2",label:"Conversational",text:"Tone: warm, natural and human, with varied sentence lengths."},
+     {code:"T3",label:"Persuasive",text:"Tone: persuasive and benefit-driven, engineered to drive a specific action."},
+     {code:"T4",label:"Objective",text:"Tone: neutral, analytical and completely unbiased."},
+     {code:"T5",label:"Interactive",text:"Tone: interactive. Ask me questions to guide the process rather than just giving the answer."}],
+  f:[{code:"F1",label:"Matrix (table)",text:"A clean table with clearly labelled columns."},
+     {code:"F2",label:"Summary",text:"A high-density summary of 3–5 key bullet points."},
+     {code:"F3",label:"Step-by-Step",text:"A chronological, easy-to-follow step-by-step guide."},
+     {code:"F4",label:"Checklist",text:"An actionable, checkbox-style checklist ordered by priority."},
+     {code:"F5",label:"Comparison",text:"A balanced comparison of pros and cons, ending in a definitive verdict."}]
+};
+
+/* ---------- build the dropdowns ---------- */
+const libLookup={};
+(function(){
+  const sel=document.getElementById('lib-select');
+  const none=document.createElement('option');
+  none.value="";none.textContent="— none, I'll start from scratch —";
+  sel.appendChild(none);
+  for(const group in LIBRARY){
+    const og=document.createElement('optgroup');og.label=group;
+    LIBRARY[group].forEach(it=>{
+      libLookup[it.code]=it;
+      const o=document.createElement('option');
+      o.value=it.code;o.textContent=it.code+" — "+it.label;
+      og.appendChild(o);
     });
-
-    // Enter Key Listener for Login
-    document.getElementById('verify-input').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') {
-            verifyPurchase();
-        }
+    sel.appendChild(og);
+  }
+  ['p','t','f'].forEach(k=>{
+    const s=document.getElementById('boost-'+k);
+    const n=document.createElement('option');n.value="";n.textContent="None";s.appendChild(n);
+    BOOSTERS[k].forEach(b=>{
+      const o=document.createElement('option');
+      o.value=b.code;o.textContent=b.code+" — "+b.label;
+      s.appendChild(o);
     });
+  });
+})();
 
-    // Verification Logic
-    function verifyPurchase() {
-        const answer = document.getElementById('verify-input').value.trim().toLowerCase();
-        if (answer === 'layout') {
-            document.getElementById('auth-card').classList.add('hidden');
-            document.getElementById('builder-section').classList.remove('hidden');
-        } else {
-            document.getElementById('error-msg').style.display = 'block';
-        }
+/* ---------- prefill / boosters (visible edits, never hidden) ---------- */
+function flash(el){el.classList.add('field-flash');setTimeout(()=>el.classList.remove('field-flash'),450);}
+function setField(id,val){const el=document.getElementById(id);el.value=val;el.dispatchEvent(new Event('input'));flash(el);}
+
+function prefillFromLibrary(){
+  const item=libLookup[document.getElementById('lib-select').value];
+  if(!item)return;
+  setField('role',item.role);
+  setField('task',item.task);
+  setField('context',item.context);
+  setField('format',item.format);
+}
+
+function applyBooster(kind){
+  const code=document.getElementById('boost-'+kind).value;
+  if(!code)return;
+  const b=BOOSTERS[kind].find(x=>x.code===code);
+  if(kind==='p') setField('role',b.text);
+  if(kind==='f') setField('format',b.text);
+  if(kind==='t'){
+    const ctx=document.getElementById('context');
+    const cleaned=ctx.value.replace(/\n?Tone: .*$/m,'').trim();
+    setField('context',(cleaned?cleaned+"\n":"")+b.text);
+  }
+}
+
+/* ---------- character counters ---------- */
+document.querySelectorAll('#builder textarea').forEach(t=>{
+  t.addEventListener('input',function(){
+    const c=document.getElementById(this.id+'-count');
+    if(!c)return;
+    const max=parseInt(this.getAttribute('maxlength'));
+    c.textContent=this.value.length+" / "+max;
+    const u=this.value.length/max;
+    c.classList.toggle('at-limit',u>=.95);
+    c.classList.toggle('near-limit',u>=.80&&u<.95);
+  });
+});
+
+/* ---------- access gate ---------- */
+document.getElementById('verify-input').addEventListener('keypress',e=>{if(e.key==='Enter')verifyPurchase();});
+function verifyPurchase(){
+  // Must match the first word next to THINK under FORMAT on the printed mat.
+  if(document.getElementById('verify-input').value.trim().toLowerCase()==='layout'){
+    document.getElementById('auth-card').classList.add('hidden');
+    document.getElementById('builder').classList.remove('hidden');
+    try{sessionStorage.setItem('cf_unlocked','1');}catch(e){}
+  }else{
+    document.getElementById('error-msg').style.display='block';
+  }
+}
+try{if(sessionStorage.getItem('cf_unlocked')==='1'){
+  document.getElementById('auth-card').classList.add('hidden');
+  document.getElementById('builder').classList.remove('hidden');
+}}catch(e){}
+
+/* ---------- STAGE 1: instant browser assembly (never fails) ---------- */
+let versions={yours:"",sharp:""};
+let current='yours';
+
+function buildPrompt(){
+  const role=document.getElementById('role').value.trim();
+  const task=document.getElementById('task').value.trim();
+  const context=document.getElementById('context').value.trim();
+  const format=document.getElementById('format').value.trim();
+
+  if(!role||!task||!context||!format){
+    alert("Fill in all four boxes to build your prompt.");
+    return;
+  }
+  const prompt =
+    "Act as "+role+".\n\n"+
+    "Your task: "+task+".\n\n"+
+    "Context you must use:\n"+context+"\n\n"+
+    "Format your response as follows:\n"+format;
+
+  versions.yours=prompt;
+  versions.sharp="";
+  document.getElementById('tab-sharp').classList.add('disabled');
+  document.getElementById('tab-sharp').classList.remove('active');
+  showVersion('yours');
+  document.getElementById('result-container').classList.remove('hidden');
+  document.getElementById('sharpen-btn').classList.remove('hidden');
+  document.getElementById('ai-error').style.display='none';
+  document.getElementById('result-container').scrollIntoView({behavior:'smooth',block:'nearest'});
+  updateQuotaNote();
+}
+
+function showVersion(which){
+  if(which==='sharp'&&!versions.sharp)return;
+  current=which;
+  const r=document.getElementById('result');
+  r.value=versions[which];
+  r.classList.toggle('sharpened',which==='sharp');
+  document.getElementById('tab-yours').classList.toggle('active',which==='yours');
+  document.getElementById('tab-sharp').classList.toggle('active',which==='sharp');
+}
+
+/* keep manual edits ---------- */
+document.getElementById('result').addEventListener('input',function(){versions[current]=this.value;});
+
+/* ---------- STAGE 2: optional AI sharpening ---------- */
+const LIMIT=10, WINDOW_MS=60*60*1000;
+
+function getUses(){
+  try{
+    const raw=localStorage.getItem('cf_uses');
+    const arr=raw?JSON.parse(raw):[];
+    return arr.filter(t=>Date.now()-t<WINDOW_MS);
+  }catch(e){return [];}
+}
+function recordUse(){
+  try{const a=getUses();a.push(Date.now());localStorage.setItem('cf_uses',JSON.stringify(a));}catch(e){}
+}
+function updateQuotaNote(){
+  const left=Math.max(0,LIMIT-getUses().length);
+  document.getElementById('quota-note').textContent=
+    "AI sharpening: "+left+" of "+LIMIT+" left this hour. Your prompt above always works, with or without it.";
+  document.getElementById('sharpen-btn').disabled = left<=0;
+}
+
+async function sharpenWithAI(){
+  if(getUses().length>=LIMIT){
+    showAIError("You've used all 10 sharpenings this hour. Your built prompt above is ready to use as it is — try again later for the AI version.");
+    updateQuotaNote();
+    return;
+  }
+  const btn=document.getElementById('sharpen-btn');
+  btn.textContent="Sharpening…";btn.disabled=true;
+  document.getElementById('ai-error').style.display='none';
+
+  try{
+    const res=await fetch('/api/enhance',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt:versions.yours})
+    });
+    const data=await res.json();
+    if(res.ok&&data.prompt){
+      versions.sharp=data.prompt;
+      recordUse();
+      document.getElementById('tab-sharp').classList.remove('disabled');
+      showVersion('sharp');
+    }else if(res.status===429){
+      showAIError("The AI sharpener is busy right now. Your built prompt above works perfectly as it is — try again in a few minutes.");
+    }else{
+      showAIError("Couldn't reach the AI sharpener. Your built prompt above works perfectly as it is.");
     }
+  }catch(e){
+    showAIError("Couldn't reach the AI sharpener — check your connection. Your built prompt above works perfectly as it is.");
+  }
+  btn.textContent="Sharpen with AI";
+  updateQuotaNote();
+}
 
-    // AI Generation Logic
-    async function generatePrompt() {
-        const roleVal = document.getElementById('role').value.trim();
-        const taskVal = document.getElementById('task').value.trim();
-        const contextVal = document.getElementById('context').value.trim();
-        const formatVal = document.getElementById('format').value.trim();
+function showAIError(msg){
+  const el=document.getElementById('ai-error');
+  el.textContent=msg;el.style.display='block';
+}
 
-        if (!roleVal || !taskVal || !contextVal || !formatVal) {
-            alert("All 4 fields are mandatory to engineer an elite prompt. Please complete any missing sections.");
-            return;
-        }
-
-        const btn = document.getElementById('gen-btn');
-        btn.innerText = "Generating..."; 
-        btn.disabled = true;
-
-        const payload = { role: roleVal, task: taskVal, context: contextVal, format: formatVal };
-
-        try {
-            const response = await fetch('/api/generate', {
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await response.json();
-            
-            if (response.ok) {
-                document.getElementById('result').innerText = data.prompt;
-                document.getElementById('result-container').classList.remove('hidden');
-            } else { 
-                alert("Network timeout. The AI servers are currently processing heavy load. Please wait 10 seconds and try again."); 
-            }
-        } catch (error) { 
-            alert("Connection error. Please check your internet connection and try again."); 
-        }
-        
-        btn.innerText = "Generate Master Prompt"; 
-        btn.disabled = false;
-    }
-
-    // Launchpad Logic
-    function copyPromptToClipboard() {
-        const promptText = document.getElementById('result').innerText;
-        navigator.clipboard.writeText(promptText).then(() => {
-            alert("Prompt copied to clipboard!"); 
-        });
-    }
-
-    function launchAI(aiUrl) {
-        const promptText = document.getElementById('result').innerText;
-        navigator.clipboard.writeText(promptText).then(() => {
-            window.open(aiUrl, '_blank');
-        });
-    }
+/* ---------- copy ---------- */
+function copyPrompt(){
+  const text=document.getElementById('result').value;
+  if(!navigator.clipboard){
+    document.getElementById('result').select();
+    return;
+  }
+  navigator.clipboard.writeText(text).then(()=>{
+    document.getElementById('copy-confirm').style.display='block';
+    setTimeout(()=>{document.getElementById('copy-confirm').style.display='none';},4000);
+  }).catch(()=>{
+    alert("Couldn't copy automatically — select the text in the box and copy it manually.");
+  });
+}
 </script>
 </body>
 </html>
