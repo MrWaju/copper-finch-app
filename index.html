@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Copper Finch — AI Prompt Constructor</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<meta name="theme-color" content="#0F172A">
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -68,6 +72,9 @@
   input:focus,textarea:focus,select:focus{outline:none;border-color:var(--electric-blue)}
   textarea{resize:vertical;min-height:78px;line-height:1.5}
   select{cursor:pointer}
+  select option{background-color:#16223B;color:var(--off-white);padding:8px}
+  select optgroup{background-color:var(--midnight-slate);color:var(--copper);font-style:normal;font-weight:700}
+  select option:checked{background-color:var(--deep-steel)}
   .field-flash{border-color:var(--copper) !important}
   button{
     width:100%;background:var(--electric-blue);color:#fff;border:none;padding:15px;border-radius:8px;
@@ -288,7 +295,7 @@
       <p class="result-note">Anything in [square brackets] is yours to replace. Edit it here, then copy.</p>
 
       <button onclick="sharpenWithAI()" id="sharpen-btn" class="secondary">Sharpen with AI</button>
-      <p class="quota-note" id="quota-note">AI sharpening is limited to 10 per hour to keep this tool free for everyone.</p>
+      <p class="quota-note" id="quota-note">Optional extra polish — your prompt above is already ready to use. 10 sharpenings available each hour.</p>
       <p class="privacy-note">
         Sharpening sends your text to Google's AI to create the improved version.
         Please don't paste confidential or personal information. <a href="privacy.html">Privacy</a>
@@ -742,11 +749,11 @@ function getUses(){try{return (JSON.parse(localStorage.getItem('cf_uses')||'[]')
 function recordUse(){try{const a=getUses();a.push(Date.now());localStorage.setItem('cf_uses',JSON.stringify(a));}catch(e){}}
 function updateQuotaNote(){
   const left=Math.max(0,LIMIT-getUses().length);
-  document.getElementById('quota-note').textContent="AI sharpening: "+left+" of "+LIMIT+" left this hour. Your prompt above always works, with or without it.";
+  document.getElementById('quota-note').textContent="Optional extra polish — your prompt above is already ready to use. "+left+" of "+LIMIT+" sharpenings left this hour.";
   document.getElementById('sharpen-btn').disabled=left<=0;
 }
 async function sharpenWithAI(){
-  if(getUses().length>=LIMIT){showAIError("You've used all 10 sharpenings this hour. Your built prompt above is ready to use as it is.");updateQuotaNote();return;}
+  if(getUses().length>=LIMIT){showAIError("You've used all 10 sharpenings this hour. Your prompt above is ready to use as it is — try again later for the AI version.");updateQuotaNote();return;}
   const btn=document.getElementById('sharpen-btn');
   btn.textContent="Sharpening…";btn.disabled=true;
   document.getElementById('ai-error').style.display='none';
@@ -757,9 +764,9 @@ async function sharpenWithAI(){
       versions.sharp=data.prompt;recordUse();
       document.getElementById('tab-sharp').classList.remove('disabled');
       showVersion('sharp');maybeShowReview();
-    }else if(res.status===429){showAIError("The AI sharpener is busy right now. Your built prompt above works perfectly as it is — try again in a few minutes.");}
-    else{showAIError("Couldn't reach the AI sharpener. Your built prompt above works perfectly as it is.");}
-  }catch(e){showAIError("Couldn't reach the AI sharpener — check your connection. Your built prompt above works perfectly as it is.");}
+    }else if(res.status===429){showAIError("The AI sharpener is busy right now. Your prompt above is ready to use as it is — try again in a few minutes.");}
+    else{showAIError("Couldn't reach the AI sharpener. Your prompt above is ready to use as it is.");}
+  }catch(e){showAIError("Couldn't reach the AI sharpener — check your connection. Your prompt above is ready to use as it is.");}
   btn.textContent="Sharpen with AI";updateQuotaNote();
 }
 function showAIError(m){const e=document.getElementById('ai-error');e.textContent=m;e.style.display='block';}
