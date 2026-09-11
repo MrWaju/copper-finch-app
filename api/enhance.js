@@ -9,11 +9,19 @@
  *     Value: <your key>
  * Then redeploy. Environment variables only take effect on a new deployment.
  *
- * MODEL NAME: check the current name in Google AI Studio and update MODEL
- * below if Google has renamed it.
+ * MODELS: this file tries each model below in order and uses the first one
+ * that works. If Google retires the top one, the code silently falls through
+ * to the next — so the Sharpen feature keeps working without you touching it.
+ * Newest first. You rarely need to edit this, but if you ever want to, just
+ * add the current model name from Google AI Studio to the TOP of the list.
  */
 
-const MODEL = 'gemini-2.0-flash';
+const MODELS = [
+  'gemini-3.6-flash',   // current stable Flash (Sept 2026)
+  'gemini-3.5-flash',   // previous stable
+  'gemini-2.5-flash',   // older fallback
+  'gemini-2.0-flash'    // last-resort fallback
+];
 const HOURLY_LIMIT = 10;        // matches the message shown on the page
 const DAILY_GLOBAL_CAP = 2000;  // hard ceiling so no bill can run away
 
@@ -88,45 +96,57 @@ export default async function handler(req, res) {
     '\n===== PROMPT TO IMPROVE (END) =====\n\n' +
     'Now return only the improved version of the text between those markers.';
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-          contents: [{ parts: [{ text: wrapped }] }],
-          generationConfig: { temperature: 0.4, maxOutputTokens: 1200 }
-        })
+  const requestBody = JSON.stringify({
+    system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+    contents: [{ parts: [{ text: wrapped }] }],
+    generationConfig: { temperature: 0.4, maxOutputTokens: 1200 }
+  });
+
+  // Try each model in turn. If one is retired/unavailable (e.g. a 404), or
+  // returns nothing usable, fall through to the next. Only give up once every
+  // model has failed — so a renamed model never breaks the feature for users.
+  for (const model of MODELS) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: requestBody
+        }
+      );
+
+      if (!response.ok) {
+        // 400/404 usually means "this model name isn't valid here" — try the next one.
+        continue;
       }
-    );
 
-    if (!response.ok) {
-      return res.status(502).json({ error: 'Upstream error' });
+      const data = await response.json();
+      let text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) continue;
+
+      // Strip any stray code fences or leftover markers
+      text = text
+        .replace(/^```[a-z]*\n?/i, '')
+        .replace(/```$/, '')
+        .replace(/=====.*?=====/g, '')
+        .trim();
+
+      if (!text) continue;
+
+      recent.push(now);
+      visitors.set(ip, recent);
+      globalCount++;
+
+      return res.status(200).json({ prompt: text });
+
+    } catch (err) {
+      // Network/parse error on this model — try the next.
+      continue;
     }
-
-    const data = await response.json();
-    let text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) {
-      return res.status(502).json({ error: 'Empty response' });
-    }
-
-    // Strip any stray code fences or leftover markers
-    text = text
-      .replace(/^```[a-z]*\n?/i, '')
-      .replace(/```$/, '')
-      .replace(/=====.*?=====/g, '')
-      .trim();
-
-    recent.push(now);
-    visitors.set(ip, recent);
-    globalCount++;
-
-    return res.status(200).json({ prompt: text });
-
-  } catch (err) {
-    return res.status(502).json({ error: 'Upstream error' });
   }
+
+  // Every model failed. The page handles this gracefully: the user still has
+  // their built prompt, and sees the "couldn't reach the sharpener" message.
+  return res.status(502).json({ error: 'All models unavailable' });
 }
