@@ -7,90 +7,157 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --midnight-slate:#0F172A;
-    --electric-blue:#3B82F6;
-    --deep-steel:#1E293B;
-    --off-white:#F8FAFC;
-    --gray-text:#94A3B8;
-    --copper:#C6794D;
-    --green:#34D399;
+    --midnight-slate:#0F172A; --electric-blue:#3B82F6; --deep-steel:#1E293B;
+    --off-white:#F8FAFC; --gray-text:#94A3B8; --copper:#C6794D; --green:#34D399; --amber:#F59E0B;
   }
   *{box-sizing:border-box}
   body{
     font-family:'Inter',sans-serif;background:var(--midnight-slate);color:var(--off-white);
-    display:flex;flex-direction:column;align-items:center;margin:0;padding:40px 16px;
+    margin:0;padding:40px 16px;min-height:100vh;position:relative;overflow-x:hidden;
+    display:flex;flex-direction:column;align-items:center;
   }
-  .container{max-width:640px;width:100%}
+  /* gradient mesh */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+    background:
+      radial-gradient(48rem 34rem at 12% 8%, rgba(59,130,246,.22), transparent 65%),
+      radial-gradient(42rem 30rem at 88% 22%, rgba(198,121,77,.16), transparent 62%),
+      radial-gradient(50rem 38rem at 50% 105%, rgba(59,130,246,.13), transparent 68%);
+    filter:blur(12px);
+  }
+  /* faint grid on top */
+  body::after{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148,163,184,.05) 1px, transparent 1px);
+    background-size:44px 44px;
+    -webkit-mask-image:radial-gradient(ellipse 85% 70% at 50% 35%, #000 35%, transparent 100%);
+    mask-image:radial-gradient(ellipse 85% 70% at 50% 35%, #000 35%, transparent 100%);
+  }
+  .container{max-width:660px;width:100%;position:relative}
   header{text-align:center;margin-bottom:32px}
   header img{max-height:90px;margin-bottom:12px}
   .logo-fallback{font-size:24px;font-weight:700;letter-spacing:3px;margin-bottom:10px}
   .logo-fallback span{color:var(--electric-blue)}
   header p{color:var(--gray-text);font-size:15px;margin:0}
-
-  .box{background:var(--midnight-slate);border:2px solid var(--deep-steel);border-radius:8px;padding:28px;margin-bottom:20px}
+  .box{
+    background:rgba(15,23,42,.72);backdrop-filter:blur(10px);
+    border:1px solid rgba(148,163,184,.16);border-radius:12px;padding:28px;margin-bottom:20px;
+    box-shadow:0 8px 30px rgba(0,0,0,.25);
+  }
   .hidden{display:none !important}
   h2{font-size:22px;margin:0 0 14px}
-
   label{font-size:14px;font-weight:600;display:block}
-  .input-header{display:flex;justify-content:space-between;align-items:flex-end;margin:24px 0 4px}
-  .char-counter{font-size:12px;color:var(--gray-text)}
-  .char-counter.near-limit{color:#F59E0B}
-  .char-counter.at-limit{color:#EF4444}
+  .input-header{display:flex;justify-content:space-between;align-items:flex-end;margin:24px 0 4px;gap:10px}
+  .char-counter{font-size:12px;color:var(--gray-text);white-space:nowrap}
+  .char-counter.near-limit{color:var(--amber)} .char-counter.at-limit{color:#EF4444}
   .helper-text{display:block;font-size:12.5px;color:var(--gray-text);font-style:italic;margin-bottom:9px;line-height:1.45}
-
+  .optional{font-weight:400;color:var(--gray-text);font-size:12.5px}
   input[type=text],textarea,select{
-    width:100%;background:rgba(0,0,0,.2);border:1px solid var(--deep-steel);color:var(--off-white);
-    padding:12px 14px;border-radius:6px;font-size:16px;font-family:'Inter',sans-serif;
+    width:100%;background:rgba(0,0,0,.25);border:1px solid rgba(148,163,184,.18);color:var(--off-white);
+    padding:12px 14px;border-radius:8px;font-size:16px;font-family:'Inter',sans-serif;
   }
   input:focus,textarea:focus,select:focus{outline:none;border-color:var(--electric-blue)}
   textarea{resize:vertical;min-height:78px;line-height:1.5}
   select{cursor:pointer}
-  .field-flash{border-color:var(--copper) !important;transition:border-color .1s}
-
+  .field-flash{border-color:var(--copper) !important}
   button{
-    width:100%;background:var(--electric-blue);color:#fff;border:none;padding:15px;border-radius:6px;
+    width:100%;background:var(--electric-blue);color:#fff;border:none;padding:15px;border-radius:8px;
     font-size:16px;font-weight:600;cursor:pointer;margin-top:22px;transition:opacity .2s;
   }
   button:hover{opacity:.9}
   button:disabled{background:var(--deep-steel);color:var(--gray-text);cursor:not-allowed}
   button.secondary{background:transparent;border:1px solid var(--copper);color:var(--copper)}
-  button.secondary:hover{background:rgba(198,121,77,.1);opacity:1}
-  button.ghost{background:transparent;border:1px solid var(--deep-steel);color:var(--gray-text);font-size:14px;padding:11px}
-
-  .library-strip{background:rgba(198,121,77,.07);border:1px solid rgba(198,121,77,.3);border-radius:6px;padding:16px;margin-bottom:6px}
+  button.secondary:hover{background:rgba(198,121,77,.12);opacity:1}
+  button.ghost{background:transparent;border:1px solid rgba(148,163,184,.2);color:var(--gray-text);font-size:14px;padding:11px;margin-top:10px}
+  button.ghost:hover{background:rgba(148,163,184,.08);opacity:1}
+  .btn-row{display:flex;gap:10px}
+  .btn-row button{flex:1}
+  .library-strip{background:rgba(198,121,77,.07);border:1px solid rgba(198,121,77,.28);border-radius:10px;padding:16px;margin-bottom:6px}
   .library-strip label{color:var(--copper);margin-bottom:4px}
   .code-chip{
     display:inline-block;background:rgba(198,121,77,.15);color:var(--copper);
     border:1px solid rgba(198,121,77,.4);border-radius:4px;padding:1px 7px;
     font-size:11.5px;font-weight:700;margin-right:7px;letter-spacing:.5px;
   }
-  .optional{font-weight:400;color:var(--gray-text);font-size:12.5px}
-
-  /* result area */
+  .strength{margin-top:18px;padding:14px;border-radius:10px;background:rgba(0,0,0,.22);border:1px solid rgba(148,163,184,.14)}
+  .strength-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:8px}
+  .strength-bar{height:6px;border-radius:3px;background:rgba(148,163,184,.18);overflow:hidden}
+  .strength-fill{height:100%;width:0;border-radius:3px;background:var(--amber);transition:width .3s,background .3s}
+  .strength-tips{margin:9px 0 0;padding-left:18px;font-size:12.5px;color:var(--gray-text);line-height:1.6}
   #result-container{margin-top:28px}
   .result-tabs{display:flex;gap:8px;margin-bottom:10px}
   .result-tab{
-    flex:1;text-align:center;padding:9px;border-radius:6px;cursor:pointer;font-size:13.5px;font-weight:600;
-    background:rgba(0,0,0,.2);border:1px solid var(--deep-steel);color:var(--gray-text);transition:all .2s;
+    flex:1;text-align:center;padding:9px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:600;
+    background:rgba(0,0,0,.22);border:1px solid rgba(148,163,184,.16);color:var(--gray-text);
   }
   .result-tab.active{background:var(--deep-steel);color:var(--off-white);border-color:var(--electric-blue)}
   .result-tab.disabled{opacity:.4;cursor:not-allowed}
   #result{
-    background:rgba(0,0,0,.3);padding:18px;border-left:4px solid var(--electric-blue);
-    line-height:1.6;border-radius:0 8px 8px 0;font-size:15px;min-height:150px;width:100%;
+    background:rgba(0,0,0,.32);padding:18px;border-left:4px solid var(--electric-blue);
+    line-height:1.6;border-radius:0 10px 10px 0;font-size:15px;min-height:150px;
     color:var(--off-white);font-family:'Inter',sans-serif;resize:vertical;
   }
   #result.sharpened{border-left-color:var(--copper)}
   .result-note{font-size:12.5px;color:var(--gray-text);margin:8px 2px 0;font-style:italic}
   .quota-note{font-size:12px;color:var(--gray-text);text-align:center;margin:8px 0 0}
+  .privacy-note{font-size:12px;color:var(--gray-text);text-align:center;margin:6px 0 0;line-height:1.5}
+  .privacy-note a{color:var(--gray-text)}
   #copy-confirm{color:var(--green);font-size:14px;text-align:center;margin-top:12px;display:none}
-  #ai-error{color:#F59E0B;font-size:13.5px;text-align:center;margin-top:12px;display:none;line-height:1.5}
-
+  #ai-error{color:var(--amber);font-size:13.5px;text-align:center;margin-top:12px;display:none;line-height:1.5}
   .launchpad{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;flex-wrap:wrap}
   .launchpad span{color:var(--gray-text);font-size:14px}
-  .launchpad a{color:var(--off-white);text-decoration:none;font-size:14px;border:1px solid var(--deep-steel);padding:6px 12px;border-radius:4px}
+  .launchpad a{color:var(--off-white);text-decoration:none;font-size:14px;border:1px solid rgba(148,163,184,.2);padding:6px 12px;border-radius:6px}
   .launchpad a:hover{background:var(--deep-steel)}
-  footer{text-align:center;color:var(--gray-text);font-size:12px;margin-top:24px}
+  .debug-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(max-width:520px){.debug-grid{grid-template-columns:1fr}}
+  .debug-btn{
+    text-align:left;background:rgba(0,0,0,.22);border:1px solid rgba(148,163,184,.16);
+    color:var(--off-white);padding:11px 13px;border-radius:8px;cursor:pointer;font-size:13.5px;
+    font-weight:600;margin:0;width:100%;
+  }
+  .debug-btn:hover{border-color:var(--copper);opacity:1}
+  .debug-btn.active{border-color:var(--copper);background:rgba(198,121,77,.12)}
+  .debug-btn small{display:block;font-weight:400;color:var(--gray-text);font-size:11.5px;margin-top:2px}
+  #debug-output{
+    margin-top:14px;background:rgba(0,0,0,.32);padding:16px;border-left:4px solid var(--copper);
+    border-radius:0 10px 10px 0;font-size:14.5px;line-height:1.6;display:none;
+  }
+  .saved-item{
+    background:rgba(0,0,0,.22);border:1px solid rgba(148,163,184,.14);border-radius:8px;
+    padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;
+  }
+  .saved-item .t{font-size:14px;font-weight:600;margin-bottom:2px}
+  .saved-item .p{font-size:12px;color:var(--gray-text);line-height:1.4}
+  .saved-actions{display:flex;gap:6px;flex-shrink:0}
+  .mini{
+    background:transparent;border:1px solid rgba(148,163,184,.22);color:var(--gray-text);
+    font-size:12px;padding:5px 9px;border-radius:6px;margin:0;width:auto;cursor:pointer;
+  }
+  .mini:hover{color:var(--off-white);opacity:1}
+  .empty{font-size:13px;color:var(--gray-text);font-style:italic}
+  #review-nudge{
+    background:rgba(198,121,77,.09);border:1px solid rgba(198,121,77,.3);
+    border-radius:10px;padding:16px;margin-top:18px;display:none;position:relative;
+  }
+  #review-nudge p{margin:0 0 10px;font-size:14px;line-height:1.55}
+  #review-nudge .dismiss{
+    position:absolute;top:8px;right:10px;background:none;border:none;color:var(--gray-text);
+    font-size:18px;cursor:pointer;width:auto;margin:0;padding:2px 6px;
+  }
+  #review-nudge a{
+    display:inline-block;color:var(--copper);border:1px solid var(--copper);
+    padding:8px 14px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;
+  }
+  #shared-view .sv-prompt{
+    background:rgba(0,0,0,.32);padding:18px;border-left:4px solid var(--copper);
+    border-radius:0 10px 10px 0;white-space:pre-wrap;line-height:1.6;font-size:15px;
+  }
+  .sv-cta{text-align:center;margin-top:20px;font-size:14px;color:var(--gray-text);line-height:1.6}
+  .sv-cta a{color:var(--copper)}
+  footer{text-align:center;color:var(--gray-text);font-size:12px;margin-top:26px;line-height:1.8}
+  footer a{color:var(--gray-text)}
 </style>
 </head>
 <body>
@@ -103,7 +170,19 @@
     <p>From desk to screen</p>
   </header>
 
-  <!-- ============ ACCESS GATE ============ -->
+  <!-- SHARED PROMPT VIEW (no gate) -->
+  <div id="shared-view" class="box hidden">
+    <h2>A prompt has been shared with you</h2>
+    <div class="sv-prompt" id="sv-text"></div>
+    <button onclick="copyShared()">Copy this prompt</button>
+    <p id="sv-copied" style="color:var(--green);font-size:14px;text-align:center;margin-top:10px;display:none">Copied.</p>
+    <div class="sv-cta">
+      Made with the <strong>Copper Finch AI Prompt Mat</strong> — the desk mat that teaches you to prompt properly.<br>
+      <a href="https://thecopperfinch.com" target="_blank" rel="noopener">See the mat →</a>
+    </div>
+  </div>
+
+  <!-- ACCESS GATE -->
   <div id="auth-card" class="box">
     <h2>Unlock the Constructor</h2>
     <p style="font-size:15px;line-height:1.6;margin-bottom:18px">
@@ -118,17 +197,18 @@
     </p>
   </div>
 
-  <!-- ============ CONSTRUCTOR ============ -->
+  <!-- CONSTRUCTOR -->
   <div id="builder" class="box hidden">
-
-    <!-- Library prefill -->
     <div class="library-strip">
       <label>Start from the Library <span class="optional">— optional</span></label>
-      <span class="helper-text" style="margin-bottom:8px">Pick a ready-made prompt and it fills all four boxes below. Edit anything you like.</span>
+      <span class="helper-text" style="margin-bottom:8px">Pick a ready-made prompt and it fills all four boxes. Edit anything you like.</span>
       <select id="lib-select" onchange="prefillFromLibrary()"></select>
+      <div style="height:12px"></div>
+      <label>Or start from your role <span class="optional">— optional</span></label>
+      <span class="helper-text" style="margin-bottom:8px">Extra prompts built for specific jobs — bonus content, not on the mat.</span>
+      <select id="role-select" onchange="prefillFromRole()"></select>
     </div>
 
-    <!-- 1 ROLE -->
     <div class="input-header">
       <label>1. ROLE <span class="optional">(The Persona)</span></label>
       <span class="char-counter" id="role-count">0 / 300</span>
@@ -140,7 +220,6 @@
     </div>
     <select id="boost-p" onchange="applyBooster('p')"></select>
 
-    <!-- 2 TASK -->
     <div class="input-header">
       <label>2. TASK <span class="optional">(The Action)</span></label>
       <span class="char-counter" id="task-count">0 / 1000</span>
@@ -148,7 +227,6 @@
     <span class="helper-text">ASK YOURSELF: What exact mechanical action must the AI perform? What is the undeniable end-goal?</span>
     <textarea id="task" maxlength="1000" placeholder="e.g. Extract the top 3 strategic insights"></textarea>
 
-    <!-- 3 CONTEXT -->
     <div class="input-header">
       <label>3. CONTEXT <span class="optional">(The Background)</span></label>
       <span class="char-counter" id="context-count">0 / 1000</span>
@@ -160,7 +238,6 @@
     </div>
     <select id="boost-t" onchange="applyBooster('t')"></select>
 
-    <!-- 4 FORMAT -->
     <div class="input-header">
       <label>4. FORMAT <span class="optional">(The Output)</span></label>
       <span class="char-counter" id="format-count">0 / 300</span>
@@ -172,9 +249,17 @@
     </div>
     <select id="boost-f" onchange="applyBooster('f')"></select>
 
+    <div class="strength">
+      <div class="strength-head">
+        <span>Prompt strength</span>
+        <span id="strength-label" style="color:var(--gray-text);font-weight:400">Start typing…</span>
+      </div>
+      <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+      <ul class="strength-tips" id="strength-tips"></ul>
+    </div>
+
     <button onclick="buildPrompt()" id="build-btn">Build my prompt</button>
 
-    <!-- RESULT -->
     <div id="result-container" class="hidden">
       <div class="result-tabs">
         <div class="result-tab active" id="tab-yours" onclick="showVersion('yours')">Your prompt</div>
@@ -185,10 +270,19 @@
 
       <button onclick="sharpenWithAI()" id="sharpen-btn" class="secondary">Sharpen with AI</button>
       <p class="quota-note" id="quota-note">AI sharpening is limited to 10 per hour to keep this tool free for everyone.</p>
+      <p class="privacy-note">
+        Sharpening sends your text to Google's AI to create the improved version.
+        Please don't paste confidential or personal information. <a href="privacy.html">Privacy</a>
+      </p>
       <p id="ai-error"></p>
 
       <button onclick="copyPrompt()">Copy prompt</button>
       <p id="copy-confirm">Copied. Now paste it into your AI chat (Ctrl+V, or &#8984;V on Mac).</p>
+
+      <div class="btn-row">
+        <button class="ghost" onclick="savePrompt()">Save this prompt</button>
+        <button class="ghost" onclick="sharePrompt()">Copy share link</button>
+      </div>
 
       <div class="launchpad">
         <span>Or open:</span>
@@ -196,83 +290,199 @@
         <a href="https://claude.ai/new" target="_blank" rel="noopener" onclick="copyPrompt()">Claude</a>
         <a href="https://gemini.google.com/app" target="_blank" rel="noopener" onclick="copyPrompt()">Gemini</a>
       </div>
+
+      <div id="review-nudge">
+        <button class="dismiss" onclick="dismissReview()" aria-label="Dismiss">&times;</button>
+        <p>Getting good use out of the mat? Reviews help other people decide whether it's right for them, and they make a real difference to a small business like ours.</p>
+        <a href="REPLACE_WITH_YOUR_AMAZON_REVIEW_LINK" target="_blank" rel="noopener" onclick="dismissReview()">Leave a review</a>
+      </div>
     </div>
   </div>
 
-  <footer>Copper Finch · builder.thecopperfinch.com</footer>
+  <!-- DEBUGGERS -->
+  <div id="debuggers" class="box hidden">
+    <h2>Output not right?</h2>
+    <p style="font-size:14px;color:var(--gray-text);margin:0 0 16px;line-height:1.55">
+      Pick what went wrong. Copy the fix and send it as your next message — no need to start over.
+    </p>
+    <div class="debug-grid" id="debug-grid"></div>
+    <div id="debug-output"></div>
+    <button class="ghost hidden" id="debug-copy" onclick="copyDebug()">Copy this fix</button>
+    <p id="debug-copied" style="color:var(--green);font-size:14px;text-align:center;margin-top:10px;display:none">Copied.</p>
+  </div>
+
+  <!-- SAVED -->
+  <div id="saved-box" class="box hidden">
+    <h2>Your saved prompts</h2>
+    <p style="font-size:12.5px;color:var(--gray-text);margin:0 0 14px;line-height:1.55">
+      Saved in this browser on this device only — nothing is sent to us. Clearing your browser data removes them, so export a backup if they matter.
+    </p>
+    <div id="saved-list"></div>
+    <div class="btn-row">
+      <button class="ghost" onclick="exportSaved()">Export backup</button>
+      <button class="ghost" onclick="clearSaved()">Clear all</button>
+    </div>
+  </div>
+
+  <footer>
+    Copper Finch · builder.thecopperfinch.com<br>
+    <a href="privacy.html">Privacy &amp; cookies</a>
+  </footer>
 </div>
 
 <script>
 /* =====================================================================
-   MAT CONTENT — edit here to change any prompt or booster.
-   Codes match the printed mat (W/U/R Library, P/T/F Boosters).
+   CONTENT — edit here to change any prompt, booster or debugger.
+   Codes match the printed mat (W/U/R Library, P/T/F Boosters, D Debuggers).
    ===================================================================== */
 const LIBRARY = {
   "WRITE": [
-    {code:"W1",label:"Reply to an email",
-     role:"me, in my professional position",
+    {code:"W1",label:"Reply to an email",role:"me, in my professional position",
      task:"reply to the email below to achieve [desired outcome]",
      context:"Key facts they need to know: [insert]. Email:\n[paste the email here]",
      format:"Max 120 words. Warm but firm."},
-    {code:"W2",label:"Draft a document",
-     role:"a senior [profession, e.g. B2B copywriter]",
+    {code:"W2",label:"Draft a document",role:"a senior [profession, e.g. B2B copywriter]",
      task:"draft a [document type] for [audience]",
      context:"The one problem it must solve: [insert]",
      format:"Lead with the point. Cut every wasted word. Length: [insert]."},
-    {code:"W3",label:"Build a presentation",
-     role:"a presentation coach",
+    {code:"W3",label:"Build a presentation",role:"a presentation coach",
      task:"turn my notes below into a [number]-slide outline",
      context:"Audience: [insert]. What they must do afterwards: [insert]. Notes:\n[paste your notes here]",
      format:"Title plus three supporting bullets per slide."},
-    {code:"W4",label:"Generate ideas",
-     role:"an unconventional [industry] strategist",
+    {code:"W4",label:"Generate ideas",role:"an unconventional [industry] strategist",
      task:"give me [number] genuinely distinct ways to solve [problem or goal]",
      context:"What I have already tried: [insert]",
      format:"One line each, plus its single biggest risk."}
   ],
   "UNDERSTAND & DECIDE": [
-    {code:"U1",label:"Turn a meeting into actions",
-     role:"my Chief of Staff",
+    {code:"U1",label:"Turn a meeting into actions",role:"my Chief of Staff",
      task:"extract the decisions made and every action item from the notes below",
      context:"Notes:\n[paste the notes here]",
      format:"A table with columns: owner, task, deadline."},
-    {code:"U2",label:"Summarise anything long",
-     role:"my Chief of Staff",
+    {code:"U2",label:"Summarise anything long",role:"my Chief of Staff",
      task:"extract only the three insights that matter most for [my goal]",
      context:"Text:\n[paste the text here]",
      format:"Bullet points only. No preamble."},
-    {code:"U3",label:"Make a decision",
-     role:"an elite management consultant",
+    {code:"U3",label:"Make a decision",role:"an elite management consultant",
      task:"analyse the trade-offs and tell me which to choose",
      context:"I must choose between [Option A] and [Option B] for [goal]. Key constraint: [e.g. budget].",
      format:"A comparison table, followed by a definitive verdict."},
-    {code:"U4",label:"Get up to speed fast",
-     role:"an expert researcher in the field",
+    {code:"U4",label:"Get up to speed fast",role:"an expert researcher in the field",
      task:"brief me on the three leading trends in [topic]",
      context:"I am asking because [reason]",
      format:"One tight paragraph each, plus the single strongest counter-argument."}
   ],
   "REWORK": [
-    {code:"R1",label:"Polish a draft",
-     role:"a ruthless editor",
+    {code:"R1",label:"Polish a draft",role:"a ruthless editor",
      task:"rewrite the draft below to be [clearer / more authoritative]",
      context:"Audience: [insert]. Draft:\n[paste your draft here]",
      format:"Keep every fact intact. Return the final text only."},
-    {code:"R2",label:"Repurpose content",
-     role:"a digital marketer",
+    {code:"R2",label:"Repurpose content",role:"a digital marketer",
      task:"turn the content below into [e.g. a LinkedIn post, an email and a thread]",
      context:"Brand voice: [insert]. Content:\n[paste your content here]",
      format:"One consistent voice, ready to publish."},
-    {code:"R3",label:"Explain something complex",
-     role:"a master teacher",
+    {code:"R3",label:"Explain something complex",role:"a master teacher",
      task:"explain [topic] to me",
      context:"My level: [e.g. complete beginner]",
      format:"Everyday analogies, then a step-by-step checklist."},
-    {code:"R4",label:"Give feedback on work",
-     role:"an honest but supportive [manager / mentor]",
+    {code:"R4",label:"Give feedback on work",role:"an honest but supportive [manager / mentor]",
      task:"review the work below and assess it properly",
      context:"Criteria or goal: [insert]. Work:\n[paste the work here]",
      format:"Top three strengths, then top three fixes."}
+  ]
+};
+
+/* Role packs — site-only bonus content, not printed on the mat. */
+const ROLE_PACKS = {
+  "Manager / Team lead":[
+    {label:"Write a performance review",role:"an experienced people manager",
+     task:"draft a balanced performance review for [name / role]",
+     context:"Evidence and examples: [insert]. Review period: [insert].",
+     format:"Strengths, development areas, then three specific goals."},
+    {label:"Prepare a difficult conversation",role:"an experienced HR advisor",
+     task:"help me prepare for a difficult conversation about [issue]",
+     context:"Background: [insert]. What I want to achieve: [insert].",
+     format:"Opening line, three key points, likely objections and my responses."}
+  ],
+  "Salesperson":[
+    {label:"Write cold outreach",role:"a top-performing B2B sales rep",
+     task:"write a cold outreach email to [target role] at [company type]",
+     context:"What we sell: [insert]. The problem it solves: [insert].",
+     format:"Under 100 words. One clear ask. No jargon."},
+    {label:"Handle an objection",role:"a sales coach",
+     task:"give me three ways to respond to the objection: [insert objection]",
+     context:"Product: [insert]. Where we are in the process: [insert].",
+     format:"Each response in two sentences, plus when to use it."}
+  ],
+  "Marketer":[
+    {label:"Plan a campaign",role:"a senior marketing strategist",
+     task:"outline a campaign to achieve [goal]",
+     context:"Audience: [insert]. Budget: [insert]. Channels available: [insert].",
+     format:"Objective, three tactics, success metrics."},
+    {label:"Write ad copy variations",role:"a direct-response copywriter",
+     task:"write five variations of ad copy for [product]",
+     context:"Audience: [insert]. Main benefit: [insert].",
+     format:"Each under 20 words, each using a different angle."}
+  ],
+  "Consultant / Freelancer":[
+    {label:"Write a proposal",role:"an experienced independent consultant",
+     task:"draft a proposal for [client] covering [scope of work]",
+     context:"Their problem: [insert]. My rate and structure: [insert].",
+     format:"Problem, approach, deliverables, timeline, investment."},
+    {label:"Chase an unpaid invoice",role:"a calm, professional business owner",
+     task:"write a follow-up about an overdue invoice",
+     context:"Invoice details: [insert]. How overdue: [insert]. Relationship: [insert].",
+     format:"Polite but unambiguous. Under 100 words. Clear next step."}
+  ],
+  "Small business owner":[
+    {label:"Write a job advert",role:"a recruitment specialist",
+     task:"write a job advert for a [role]",
+     context:"What the job involves: [insert]. What makes us worth joining: [insert].",
+     format:"Punchy headline, what you'll do, what we need, how to apply."},
+    {label:"Answer a customer complaint",role:"a customer service lead",
+     task:"draft a response to the complaint below",
+     context:"What happened: [insert]. What I can offer: [insert]. Complaint:\n[paste it here]",
+     format:"Acknowledge, explain, resolve. Under 150 words. No defensiveness."}
+  ],
+  "Admin / PA":[
+    {label:"Turn a mess into a schedule",role:"an executive assistant",
+     task:"turn the information below into a clear schedule",
+     context:"Constraints: [insert]. Details:\n[paste here]",
+     format:"Chronological table: time, item, who, notes."},
+    {label:"Write an internal announcement",role:"an internal communications specialist",
+     task:"write an announcement about [change or news]",
+     context:"Who it affects: [insert]. What they need to do: [insert].",
+     format:"Subject line, three short paragraphs, one clear action."}
+  ],
+  "Job hunter":[
+    {label:"Tailor my CV to a job",role:"a professional CV writer",
+     task:"tell me how to tailor my CV for the role below",
+     context:"Job advert:\n[paste here]\n\nMy experience: [insert]",
+     format:"What to emphasise, what to cut, three rewritten bullet points."},
+    {label:"Prepare for an interview",role:"an interview coach",
+     task:"prepare me for an interview for [role] at [company]",
+     context:"My background: [insert]. What worries me: [insert].",
+     format:"Five likely questions, with a strong answer structure for each."}
+  ],
+  "Teacher":[
+    {label:"Build a lesson plan",role:"an experienced curriculum designer",
+     task:"build a lesson plan on [topic]",
+     context:"Age group: [insert]. Lesson length: [insert]. Prior knowledge: [insert].",
+     format:"Objectives, starter, main activity, plenary, differentiation notes."},
+    {label:"Write feedback on student work",role:"a supportive but honest teacher",
+     task:"write constructive feedback on the work below",
+     context:"Level expected: [insert]. Work:\n[paste here]",
+     format:"What worked, one priority to improve, one concrete next step."}
+  ],
+  "Student":[
+    {label:"Understand a hard topic",role:"a patient tutor",
+     task:"teach me [topic] from the ground up",
+     context:"What I already know: [insert]. Where I get stuck: [insert].",
+     format:"Plain explanation, one worked example, three practice questions."},
+    {label:"Plan an essay",role:"an academic writing tutor",
+     task:"help me plan an essay answering: [question]",
+     context:"Word count: [insert]. Sources I have: [insert].",
+     format:"The argument in one sentence, then a paragraph-by-paragraph outline."}
   ]
 };
 
@@ -294,53 +504,73 @@ const BOOSTERS = {
      {code:"F5",label:"Comparison",text:"A balanced comparison of pros and cons, ending in a definitive verdict."}]
 };
 
-/* ---------- build the dropdowns ---------- */
-const libLookup={};
+/* D1–D5 are printed on the mat. D6–D10 are site-only bonus debuggers. */
+const DEBUGGERS = [
+  {code:"D1",label:"Too vague",sub:"Generic or surface-level",
+   fix:"This lacks depth. Zoom in exclusively on [insert specific point] and rewrite it using highly specific examples, definitive language and actionable insight. No generalities."},
+  {code:"D2",label:"Sounds like AI",sub:"Obvious AI-speak or filler",
+   fix:"Rewrite this so it doesn't read as AI-written. Strip the intro, the conclusion and all filler. Ban predictable AI words (delve, landscape, tapestry, testament). Use an asymmetric human cadence with varied sentence lengths."},
+  {code:"D3",label:"Ignored my brief",sub:"Missed the objective or a constraint",
+   fix:"You missed the main objective and ignored my constraint regarding [insert constraint]. Try again, centring the primary goal and strictly adhering to that limitation. State how you have met it."},
+  {code:"D4",label:"Wrong for my situation",sub:"Technically right, practically useless",
+   fix:"You are ignoring my specific context. Re-evaluate this entire output specifically for [insert audience or situation]. Remove any advice that does not directly apply to them."},
+  {code:"D5",label:"Making things up",sub:"Fabricated or unverified claims",
+   fix:"Audit every claim in this output. Label each one [Verified from source], [Reasonable inference] or [Unverified assumption]. Do not blend the three. Remove anything you cannot support."},
+  {code:"D6",label:"Too long",sub:"Bloated and padded",
+   fix:"This is far longer than it needs to be. Cut it by at least half without losing a single fact or point. Remove all padding, restatement and throat-clearing. Return only the tightened version."},
+  {code:"D7",label:"Lost the thread",sub:"Forgot my earlier instructions",
+   fix:"You have drifted from my original instructions. Restate the brief and constraints I gave you at the start in your own words, confirm you have them right, then redo this latest output against them."},
+  {code:"D8",label:"Won't commit",sub:"Endless hedging, no recommendation",
+   fix:"Stop hedging. I need a decision, not a survey of options. Give me your single recommendation in the first sentence, then the three reasons behind it, then the strongest argument against it. Do not say 'it depends'."},
+  {code:"D9",label:"Rewrote everything",sub:"Asked for a tweak, got a rebuild",
+   fix:"I asked for a targeted change, not a rewrite. Go back to the previous version and change only [insert specific change]. Leave every other word exactly as it was. Show me only what changed."},
+  {code:"D10",label:"All the same",sub:"Fake variety, one idea repeated",
+   fix:"These options are variations of one idea, not genuine alternatives. Give me options that differ in approach, not just in wording — each should rest on a different underlying assumption. State that assumption for each one."}
+];
+
+/* ---------- populate ---------- */
+const libLookup={},roleLookup={};
 (function(){
   const sel=document.getElementById('lib-select');
-  const none=document.createElement('option');
-  none.value="";none.textContent="— none, I'll start from scratch —";
-  sel.appendChild(none);
-  for(const group in LIBRARY){
-    const og=document.createElement('optgroup');og.label=group;
-    LIBRARY[group].forEach(it=>{
-      libLookup[it.code]=it;
-      const o=document.createElement('option');
-      o.value=it.code;o.textContent=it.code+" — "+it.label;
-      og.appendChild(o);
-    });
+  sel.appendChild(new Option("— none, I'll start from scratch —",""));
+  for(const g in LIBRARY){
+    const og=document.createElement('optgroup');og.label=g;
+    LIBRARY[g].forEach(it=>{libLookup[it.code]=it;og.appendChild(new Option(it.code+" — "+it.label,it.code));});
     sel.appendChild(og);
+  }
+  const rsel=document.getElementById('role-select');
+  rsel.appendChild(new Option("— none —",""));
+  for(const g in ROLE_PACKS){
+    const og=document.createElement('optgroup');og.label=g;
+    ROLE_PACKS[g].forEach((it,i)=>{const k=g+"|"+i;roleLookup[k]=it;og.appendChild(new Option(it.label,k));});
+    rsel.appendChild(og);
   }
   ['p','t','f'].forEach(k=>{
     const s=document.getElementById('boost-'+k);
-    const n=document.createElement('option');n.value="";n.textContent="None";s.appendChild(n);
-    BOOSTERS[k].forEach(b=>{
-      const o=document.createElement('option');
-      o.value=b.code;o.textContent=b.code+" — "+b.label;
-      s.appendChild(o);
-    });
+    s.appendChild(new Option("None",""));
+    BOOSTERS[k].forEach(b=>s.appendChild(new Option(b.code+" — "+b.label,b.code)));
+  });
+  const dg=document.getElementById('debug-grid');
+  DEBUGGERS.forEach(d=>{
+    const b=document.createElement('button');
+    b.className='debug-btn';b.type='button';
+    b.innerHTML='<span class="code-chip">'+d.code+'</span>'+d.label+'<small>'+d.sub+'</small>';
+    b.onclick=()=>showDebug(d,b);
+    dg.appendChild(b);
   });
 })();
 
-/* ---------- prefill / boosters (visible edits, never hidden) ---------- */
 function flash(el){el.classList.add('field-flash');setTimeout(()=>el.classList.remove('field-flash'),450);}
 function setField(id,val){const el=document.getElementById(id);el.value=val;el.dispatchEvent(new Event('input'));flash(el);}
-
-function prefillFromLibrary(){
-  const item=libLookup[document.getElementById('lib-select').value];
-  if(!item)return;
-  setField('role',item.role);
-  setField('task',item.task);
-  setField('context',item.context);
-  setField('format',item.format);
-}
-
+function fillAll(it){setField('role',it.role);setField('task',it.task);setField('context',it.context);setField('format',it.format);}
+function prefillFromLibrary(){const it=libLookup[document.getElementById('lib-select').value];if(it){fillAll(it);document.getElementById('role-select').value="";}}
+function prefillFromRole(){const it=roleLookup[document.getElementById('role-select').value];if(it){fillAll(it);document.getElementById('lib-select').value="";}}
 function applyBooster(kind){
   const code=document.getElementById('boost-'+kind).value;
   if(!code)return;
   const b=BOOSTERS[kind].find(x=>x.code===code);
-  if(kind==='p') setField('role',b.text);
-  if(kind==='f') setField('format',b.text);
+  if(kind==='p')setField('role',b.text);
+  if(kind==='f')setField('format',b.text);
   if(kind==='t'){
     const ctx=document.getElementById('context');
     const cleaned=ctx.value.replace(/\n?Tone: .*$/m,'').trim();
@@ -348,153 +578,225 @@ function applyBooster(kind){
   }
 }
 
-/* ---------- character counters ---------- */
+/* ---------- counters + strength ---------- */
+const VAGUE=/\b(write about|help with|tell me about|something|stuff|things|good|nice|better|some)\b/i;
 document.querySelectorAll('#builder textarea').forEach(t=>{
   t.addEventListener('input',function(){
     const c=document.getElementById(this.id+'-count');
-    if(!c)return;
-    const max=parseInt(this.getAttribute('maxlength'));
-    c.textContent=this.value.length+" / "+max;
-    const u=this.value.length/max;
-    c.classList.toggle('at-limit',u>=.95);
-    c.classList.toggle('near-limit',u>=.80&&u<.95);
+    if(c){
+      const max=parseInt(this.getAttribute('maxlength'));
+      c.textContent=this.value.length+" / "+max;
+      const u=this.value.length/max;
+      c.classList.toggle('at-limit',u>=.95);
+      c.classList.toggle('near-limit',u>=.80&&u<.95);
+    }
+    updateStrength();
   });
 });
-
-/* ---------- access gate ---------- */
-document.getElementById('verify-input').addEventListener('keypress',e=>{if(e.key==='Enter')verifyPurchase();});
-function verifyPurchase(){
-  // Must match the first word next to THINK under FORMAT on the printed mat.
-  if(document.getElementById('verify-input').value.trim().toLowerCase()==='layout'){
-    document.getElementById('auth-card').classList.add('hidden');
-    document.getElementById('builder').classList.remove('hidden');
-    try{sessionStorage.setItem('cf_unlocked','1');}catch(e){}
-  }else{
-    document.getElementById('error-msg').style.display='block';
-  }
+function updateStrength(){
+  const r=document.getElementById('role').value.trim();
+  const t=document.getElementById('task').value.trim();
+  const c=document.getElementById('context').value.trim();
+  const f=document.getElementById('format').value.trim();
+  const all=[r,t,c,f].join(" ");
+  let score=0;const tips=[];
+  if(r.length>3)score+=15;else tips.push("Name a specific expert in ROLE — not \"an assistant\".");
+  if(t.length>10)score+=15;else tips.push("Say exactly what the AI must DO, with a precise verb.");
+  if(c.length>10)score+=15;else tips.push("Add background — who is reading this, and why?");
+  if(f.length>5)score+=15;else tips.push("Say how you want the answer laid out.");
+  if(all.split(/\s+/).filter(Boolean).length>=40)score+=15;
+  else tips.push("Still short. Most weak prompts are under 15 words — yours should be far longer.");
+  if(/\d/.test(all))score+=10;else tips.push("Add a number — a length, how many points, a deadline.");
+  if(/\b(audience|reader|for a|aimed at|manager|client|customer|team|beginner)\b/i.test(all))score+=10;
+  else tips.push("Name the audience explicitly.");
+  if(!VAGUE.test(all))score+=5;else tips.push("Vague wording spotted — swap words like \"good\" or \"something\" for specifics.");
+  score=Math.min(100,score);
+  const fill=document.getElementById('strength-fill'),lab=document.getElementById('strength-label');
+  fill.style.width=score+"%";
+  let colour='var(--amber)',text='Weak';
+  if(score>=80){colour='var(--green)';text='Strong';}
+  else if(score>=50){colour='var(--electric-blue)';text='Getting there';}
+  fill.style.background=colour;
+  lab.textContent=score?text:"Start typing…";
+  lab.style.color=score>=80?'var(--green)':'var(--gray-text)';
+  document.getElementById('strength-tips').innerHTML=tips.slice(0,3).map(x=>"<li>"+x+"</li>").join("");
 }
-try{if(sessionStorage.getItem('cf_unlocked')==='1'){
+
+/* ---------- gate ---------- */
+document.getElementById('verify-input').addEventListener('keypress',e=>{if(e.key==='Enter')verifyPurchase();});
+function unlock(){
   document.getElementById('auth-card').classList.add('hidden');
   document.getElementById('builder').classList.remove('hidden');
-}}catch(e){}
+  document.getElementById('debuggers').classList.remove('hidden');
+  document.getElementById('saved-box').classList.remove('hidden');
+  renderSaved();updateStrength();
+}
+function verifyPurchase(){
+  if(document.getElementById('verify-input').value.trim().toLowerCase()==='layout'){
+    try{localStorage.setItem('cf_unlocked','1');}catch(e){}
+    unlock();
+  }else{document.getElementById('error-msg').style.display='block';}
+}
+try{if(localStorage.getItem('cf_unlocked')==='1'&&location.hash.indexOf('#p=')!==0)unlock();}catch(e){}
 
-/* ---------- STAGE 1: instant browser assembly (never fails) ---------- */
-let versions={yours:"",sharp:""};
-let current='yours';
-
+/* ---------- build ---------- */
+let versions={yours:"",sharp:""},current='yours';
 function buildPrompt(){
-  const role=document.getElementById('role').value.trim();
-  const task=document.getElementById('task').value.trim();
-  const context=document.getElementById('context').value.trim();
-  const format=document.getElementById('format').value.trim();
-
-  if(!role||!task||!context||!format){
-    alert("Fill in all four boxes to build your prompt.");
-    return;
-  }
-  const prompt =
-    "Act as "+role+".\n\n"+
-    "Your task: "+task+".\n\n"+
-    "Context you must use:\n"+context+"\n\n"+
-    "Format your response as follows:\n"+format;
-
-  versions.yours=prompt;
+  const r=document.getElementById('role').value.trim();
+  const t=document.getElementById('task').value.trim();
+  const c=document.getElementById('context').value.trim();
+  const f=document.getElementById('format').value.trim();
+  if(!r||!t||!c||!f){alert("Fill in all four boxes to build your prompt.");return;}
+  versions.yours="Act as "+r+".\n\nYour task: "+t+".\n\nContext you must use:\n"+c+"\n\nFormat your response as follows:\n"+f;
   versions.sharp="";
   document.getElementById('tab-sharp').classList.add('disabled');
-  document.getElementById('tab-sharp').classList.remove('active');
   showVersion('yours');
   document.getElementById('result-container').classList.remove('hidden');
-  document.getElementById('sharpen-btn').classList.remove('hidden');
   document.getElementById('ai-error').style.display='none';
   document.getElementById('result-container').scrollIntoView({behavior:'smooth',block:'nearest'});
   updateQuotaNote();
 }
-
-function showVersion(which){
-  if(which==='sharp'&&!versions.sharp)return;
-  current=which;
+function showVersion(w){
+  if(w==='sharp'&&!versions.sharp)return;
+  current=w;
   const r=document.getElementById('result');
-  r.value=versions[which];
-  r.classList.toggle('sharpened',which==='sharp');
-  document.getElementById('tab-yours').classList.toggle('active',which==='yours');
-  document.getElementById('tab-sharp').classList.toggle('active',which==='sharp');
+  r.value=versions[w];r.classList.toggle('sharpened',w==='sharp');
+  document.getElementById('tab-yours').classList.toggle('active',w==='yours');
+  document.getElementById('tab-sharp').classList.toggle('active',w==='sharp');
 }
-
-/* keep manual edits ---------- */
 document.getElementById('result').addEventListener('input',function(){versions[current]=this.value;});
 
-/* ---------- STAGE 2: optional AI sharpening ---------- */
-const LIMIT=10, WINDOW_MS=60*60*1000;
-
-function getUses(){
-  try{
-    const raw=localStorage.getItem('cf_uses');
-    const arr=raw?JSON.parse(raw):[];
-    return arr.filter(t=>Date.now()-t<WINDOW_MS);
-  }catch(e){return [];}
-}
-function recordUse(){
-  try{const a=getUses();a.push(Date.now());localStorage.setItem('cf_uses',JSON.stringify(a));}catch(e){}
-}
+/* ---------- sharpen ---------- */
+const LIMIT=10,WINDOW_MS=36e5;
+function getUses(){try{return (JSON.parse(localStorage.getItem('cf_uses')||'[]')).filter(t=>Date.now()-t<WINDOW_MS);}catch(e){return [];}}
+function recordUse(){try{const a=getUses();a.push(Date.now());localStorage.setItem('cf_uses',JSON.stringify(a));}catch(e){}}
 function updateQuotaNote(){
   const left=Math.max(0,LIMIT-getUses().length);
-  document.getElementById('quota-note').textContent=
-    "AI sharpening: "+left+" of "+LIMIT+" left this hour. Your prompt above always works, with or without it.";
-  document.getElementById('sharpen-btn').disabled = left<=0;
+  document.getElementById('quota-note').textContent="AI sharpening: "+left+" of "+LIMIT+" left this hour. Your prompt above always works, with or without it.";
+  document.getElementById('sharpen-btn').disabled=left<=0;
 }
-
 async function sharpenWithAI(){
-  if(getUses().length>=LIMIT){
-    showAIError("You've used all 10 sharpenings this hour. Your built prompt above is ready to use as it is — try again later for the AI version.");
-    updateQuotaNote();
-    return;
-  }
+  if(getUses().length>=LIMIT){showAIError("You've used all 10 sharpenings this hour. Your built prompt above is ready to use as it is.");updateQuotaNote();return;}
   const btn=document.getElementById('sharpen-btn');
   btn.textContent="Sharpening…";btn.disabled=true;
   document.getElementById('ai-error').style.display='none';
-
   try{
-    const res=await fetch('/api/enhance',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt:versions.yours})
-    });
+    const res=await fetch('/api/enhance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:versions.yours})});
     const data=await res.json();
     if(res.ok&&data.prompt){
-      versions.sharp=data.prompt;
-      recordUse();
+      versions.sharp=data.prompt;recordUse();
       document.getElementById('tab-sharp').classList.remove('disabled');
-      showVersion('sharp');
-    }else if(res.status===429){
-      showAIError("The AI sharpener is busy right now. Your built prompt above works perfectly as it is — try again in a few minutes.");
-    }else{
-      showAIError("Couldn't reach the AI sharpener. Your built prompt above works perfectly as it is.");
-    }
-  }catch(e){
-    showAIError("Couldn't reach the AI sharpener — check your connection. Your built prompt above works perfectly as it is.");
-  }
-  btn.textContent="Sharpen with AI";
-  updateQuotaNote();
+      showVersion('sharp');maybeShowReview();
+    }else if(res.status===429){showAIError("The AI sharpener is busy right now. Your built prompt above works perfectly as it is — try again in a few minutes.");}
+    else{showAIError("Couldn't reach the AI sharpener. Your built prompt above works perfectly as it is.");}
+  }catch(e){showAIError("Couldn't reach the AI sharpener — check your connection. Your built prompt above works perfectly as it is.");}
+  btn.textContent="Sharpen with AI";updateQuotaNote();
 }
+function showAIError(m){const e=document.getElementById('ai-error');e.textContent=m;e.style.display='block';}
 
-function showAIError(msg){
-  const el=document.getElementById('ai-error');
-  el.textContent=msg;el.style.display='block';
-}
-
-/* ---------- copy ---------- */
+/* ---------- copy / save / share ---------- */
 function copyPrompt(){
   const text=document.getElementById('result').value;
-  if(!navigator.clipboard){
-    document.getElementById('result').select();
-    return;
-  }
+  if(!navigator.clipboard){document.getElementById('result').select();return;}
   navigator.clipboard.writeText(text).then(()=>{
-    document.getElementById('copy-confirm').style.display='block';
-    setTimeout(()=>{document.getElementById('copy-confirm').style.display='none';},4000);
-  }).catch(()=>{
-    alert("Couldn't copy automatically — select the text in the box and copy it manually.");
+    const c=document.getElementById('copy-confirm');
+    c.style.display='block';setTimeout(()=>c.style.display='none',4000);
+  }).catch(()=>alert("Couldn't copy automatically — select the text and copy manually."));
+}
+function getSaved(){try{return JSON.parse(localStorage.getItem('cf_saved')||'[]');}catch(e){return [];}}
+function savePrompt(){
+  const text=document.getElementById('result').value.trim();
+  if(!text)return;
+  const title=window.prompt("Name this prompt:","")||"Untitled prompt";
+  const all=getSaved();
+  all.unshift({t:title,p:text,d:new Date().toISOString()});
+  try{localStorage.setItem('cf_saved',JSON.stringify(all.slice(0,100)));}
+  catch(e){alert("Couldn't save — your browser storage may be full or blocked.");}
+  renderSaved();
+}
+function renderSaved(){
+  const list=document.getElementById('saved-list'),all=getSaved();
+  if(!all.length){list.innerHTML='<p class="empty">Nothing saved yet. Build a prompt, then tap "Save this prompt".</p>';return;}
+  list.innerHTML=all.map((s,i)=>
+    '<div class="saved-item"><div><div class="t">'+esc(s.t)+'</div><div class="p">'+esc(s.p.slice(0,70))+'…</div></div>'+
+    '<div class="saved-actions"><button class="mini" onclick="loadSaved('+i+')">Load</button>'+
+    '<button class="mini" onclick="deleteSaved('+i+')">Delete</button></div></div>').join("");
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function loadSaved(i){
+  const s=getSaved()[i];if(!s)return;
+  versions.yours=s.p;versions.sharp="";
+  document.getElementById('tab-sharp').classList.add('disabled');
+  showVersion('yours');
+  document.getElementById('result-container').classList.remove('hidden');
+  document.getElementById('result-container').scrollIntoView({behavior:'smooth'});
+}
+function deleteSaved(i){const a=getSaved();a.splice(i,1);try{localStorage.setItem('cf_saved',JSON.stringify(a));}catch(e){}renderSaved();}
+function clearSaved(){if(confirm("Delete all saved prompts? This can't be undone.")){try{localStorage.removeItem('cf_saved');}catch(e){}renderSaved();}}
+function exportSaved(){
+  const blob=new Blob([JSON.stringify(getSaved(),null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='copper-finch-prompts.json';a.click();
+}
+function sharePrompt(){
+  const text=document.getElementById('result').value;
+  if(!text)return;
+  const url=location.origin+location.pathname+"#p="+encodeURIComponent(btoa(unescape(encodeURIComponent(text))));
+  navigator.clipboard.writeText(url).then(()=>{
+    const c=document.getElementById('copy-confirm');
+    c.textContent="Share link copied. Anyone you send it to can view and copy this prompt.";
+    c.style.display='block';
+    setTimeout(()=>{c.style.display='none';c.textContent="Copied. Now paste it into your AI chat (Ctrl+V, or ⌘V on Mac).";},5000);
+  }).catch(()=>alert("Couldn't copy the link."));
+}
+(function(){
+  const h=location.hash;
+  if(h.indexOf('#p=')===0){
+    try{
+      const text=decodeURIComponent(escape(atob(decodeURIComponent(h.slice(3)))));
+      document.getElementById('sv-text').textContent=text;
+      document.getElementById('shared-view').classList.remove('hidden');
+      document.getElementById('auth-card').classList.add('hidden');
+      window.__shared=text;
+    }catch(e){}
+  }
+})();
+function copyShared(){
+  navigator.clipboard.writeText(window.__shared||"").then(()=>{
+    const c=document.getElementById('sv-copied');
+    c.style.display='block';setTimeout(()=>c.style.display='none',3000);
   });
+}
+
+/* ---------- debuggers ---------- */
+let currentDebug="";
+function showDebug(d,btn){
+  document.querySelectorAll('.debug-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentDebug=d.fix;
+  const out=document.getElementById('debug-output');
+  out.textContent=d.fix;out.style.display='block';
+  document.getElementById('debug-copy').classList.remove('hidden');
+}
+function copyDebug(){
+  navigator.clipboard.writeText(currentDebug).then(()=>{
+    const c=document.getElementById('debug-copied');
+    c.style.display='block';setTimeout(()=>c.style.display='none',3000);
+  });
+}
+
+/* ---------- review nudge (after 3rd sharpen, once only) ---------- */
+function maybeShowReview(){
+  try{
+    if(localStorage.getItem('cf_review_done')==='1')return;
+    const n=parseInt(localStorage.getItem('cf_sharpen_count')||'0')+1;
+    localStorage.setItem('cf_sharpen_count',String(n));
+    if(n>=3)document.getElementById('review-nudge').style.display='block';
+  }catch(e){}
+}
+function dismissReview(){
+  try{localStorage.setItem('cf_review_done','1');}catch(e){}
+  document.getElementById('review-nudge').style.display='none';
 }
 </script>
 </body>
