@@ -120,6 +120,11 @@
   .privacy-note a{color:var(--gray-text)}
   #copy-confirm{color:var(--green);font-size:14px;text-align:center;margin-top:12px;display:none}
   #ai-error{color:var(--amber);font-size:13.5px;text-align:center;margin-top:12px;display:none;line-height:1.5}
+  .sharpen-status{display:none;align-items:center;justify-content:center;gap:10px;font-size:13.5px;color:var(--copper);margin:10px 0 0}
+  .sharpen-status.show{display:flex}
+  .sharpen-status .spin{width:14px;height:14px;border-radius:50%;border:2px solid rgba(198,121,77,.3);border-top-color:var(--copper);animation:cfspin .8s linear infinite}
+  @keyframes cfspin{to{transform:rotate(360deg)}}
+  #result.streaming{caret-color:transparent}
   .launchpad{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;flex-wrap:wrap}
   .launchpad span{color:var(--gray-text);font-size:14px}
   .launchpad a{color:var(--off-white);text-decoration:none;font-size:14px;border:1px solid rgba(148,163,184,.2);padding:6px 12px;border-radius:6px}
@@ -295,6 +300,7 @@
       <p class="result-note">Anything in [square brackets] is yours to replace. Edit it here, then copy.</p>
 
       <button onclick="sharpenWithAI()" id="sharpen-btn" class="secondary">Sharpen with AI</button>
+      <p class="sharpen-status" id="sharpen-status" aria-live="polite"><span class="spin"></span><span id="sharpen-status-text">Reading your prompt…</span></p>
       <p class="quota-note" id="quota-note">Optional extra polish — your prompt above is already ready to use. 10 sharpenings available each hour.</p>
       <p class="privacy-note">
         Sharpening sends your text to Google's AI to create the improved version.
@@ -724,7 +730,12 @@ function buildPrompt(){
   const c=document.getElementById('context').value.trim();
   const f=document.getElementById('format').value.trim();
   if(!r||!t||!c||!f){alert("Fill in all four boxes to build your prompt.");return;}
-  versions.yours="Act as "+r+".\n\nYour task: "+t+".\n\nContext you must use:\n"+c+"\n\nFormat your response as follows:\n"+f;
+  stopSharpen();
+  // Role lines (e.g. a perspective booster) become one flowing sentence, and a
+  // full stop is only added where the text doesn't already end with one.
+  const roleLines=r.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  const roleText="Act as "+roleLines.map(endSentence).join(" ");
+  versions.yours=roleText+"\n\nYour task: "+endSentence(t)+"\n\nContext you must use:\n"+c+"\n\nFormat your response as follows:\n"+f;
   versions.sharp="";
   document.getElementById('tab-sharp').classList.add('disabled');
   showVersion('yours');
@@ -740,6 +751,18 @@ function showVersion(w){
   r.value=versions[w];r.classList.toggle('sharpened',w==='sharp');
   document.getElementById('tab-yours').classList.toggle('active',w==='yours');
   document.getElementById('tab-sharp').classList.toggle('active',w==='sharp');
+  fitResult();
+}
+/* Grow the result box to fit its text (up to a sensible height) */
+function fitResult(){
+  const r=document.getElementById('result');
+  r.style.height='auto';
+  r.style.height=Math.min(Math.max(r.scrollHeight+4,150),560)+'px';
+}
+/* Add a full stop unless the text already ends with punctuation */
+function endSentence(s){
+  s=s.trim();
+  return /[.!?…:;]["'’”)]*$/.test(s)?s:s+".";
 }
 document.getElementById('result').addEventListener('input',function(){versions[current]=this.value;});
 
@@ -752,21 +775,113 @@ function updateQuotaNote(){
   document.getElementById('quota-note').textContent="Optional extra polish — your prompt above is already ready to use. "+left+" of "+LIMIT+" sharpenings left this hour.";
   document.getElementById('sharpen-btn').disabled=left<=0;
 }
+/* Tidy the AI's text: strip markdown and leftover markers, and switch common
+   US spellings to UK. Runs on the whole text each time, so it also works while
+   the answer is still streaming in. */
+const UK_IZE=/\b(organ|summar|priorit|optim|emphas|recogn|minim|maxim|categor|util|final|custom|standard|special|apolog|critic|real|visual|personal|character|author|synthes|memor|familiar|general|normal|capital|monet|contextual|conceptual|scrutin|harmon|modern|sanit|hypothes|item|jeopard|legitim|local|neutral|stabil|strateg|central|digit|incentiv|global|human|ideal|individual|initial|internal|international|operational|popular|rational|subsid|symbol|theor|mobil|energ|revolution|amort|computer|polar|patron|fantas|agon|terror|dramat|stigmat|trivial|sensit|vandal|accessor|commercial|industrial|institutional|marginal|material|radical|steril|token|anonym|random|container)(iz)(e|ed|es|ing|able|ation|ations|ational|er|ers)\b/gi;
+const UK_YZE=/\b(anal|paral|catal|dial)(yz)(e|ed|es|ing|er|ers)\b/gi;
+const UK_WORDS={color:"colour",colors:"colours",colored:"coloured",colorful:"colourful",coloring:"colouring",
+  behavior:"behaviour",behaviors:"behaviours",behavioral:"behavioural",favorite:"favourite",favorites:"favourites",
+  favor:"favour",favors:"favours",favorable:"favourable",honor:"honour",honors:"honours",humor:"humour",
+  flavor:"flavour",flavors:"flavours",neighbor:"neighbour",neighbors:"neighbours",neighborhood:"neighbourhood",
+  rumor:"rumour",endeavor:"endeavour",endeavors:"endeavours",labor:"labour",
+  center:"centre",centers:"centres",centered:"centred",centering:"centring",theater:"theatre",fiber:"fibre",
+  catalog:"catalogue",catalogs:"catalogues",defense:"defence",offense:"offence",
+  traveled:"travelled",traveling:"travelling",traveler:"traveller",travelers:"travellers",
+  canceled:"cancelled",canceling:"cancelling",modeled:"modelled",modeling:"modelling",
+  labeled:"labelled",labeling:"labelling",fueled:"fuelled",leveled:"levelled",
+  enrollment:"enrolment",fulfill:"fulfil",fulfillment:"fulfilment",skillful:"skilful",gray:"grey"};
+const UK_WORD_RE=new RegExp("\\b("+Object.keys(UK_WORDS).join("|")+")\\b","gi");
+function matchCase(src,out){
+  if(src===src.toUpperCase())return out.toUpperCase();
+  if(src[0]===src[0].toUpperCase())return out[0].toUpperCase()+out.slice(1);
+  return out;
+}
+function cleanSharpened(t){
+  t=t.replace(/^```[a-z]*\s*$/gim,"")                 // code fences
+     .replace(/=====[^\n]*?=====/g,"")                  // leftover markers
+     .replace(/^[ \t]{0,3}#{1,6}[ \t]+/gm,"")                 // # headings
+     .replace(/\*\*([^*\n]+)\*\*/g,"$1")                // **bold**
+     .replace(/__([^_\n]+)__/g,"$1")                    // __bold__
+     .replace(/^([ \t]*)[*•][ \t]+/gm,"$1- ")                 // * bullets → -
+     .replace(/(^|[\s(])\*(\S[^*\n]*?)\*(?=[\s).,;:!?]|$)/gm,"$1$2") // *italics*
+     .replace(/\*\*/g,"");                              // any unpaired **
+  t=t.replace(UK_IZE,(m,a,z,b)=>a+z.replace("z","s").replace("Z","S")+b)
+     .replace(UK_YZE,(m,a,z,b)=>a+z.replace("z","s").replace("Z","S")+b)
+     .replace(UK_WORD_RE,m=>matchCase(m,UK_WORDS[m.toLowerCase()]));
+  return t.replace(/\n{3,}/g,"\n\n").replace(/^\s+/,"");
+}
+
+let sharpenAbort=null;
+function stopSharpen(){if(sharpenAbort){sharpenAbort.abort();sharpenAbort=null;}}
+function setStatus(msg){
+  const s=document.getElementById('sharpen-status');
+  if(!msg){s.classList.remove('show');return;}
+  document.getElementById('sharpen-status-text').textContent=msg;s.classList.add('show');
+}
+
 async function sharpenWithAI(){
   if(getUses().length>=LIMIT){showAIError("You've used all 10 sharpenings this hour. Your prompt above is ready to use as it is — try again later for the AI version.");updateQuotaNote();return;}
   const btn=document.getElementById('sharpen-btn');
+  const box=document.getElementById('result');
   btn.textContent="Sharpening…";btn.disabled=true;
   document.getElementById('ai-error').style.display='none';
-  try{
-    const res=await fetch('/api/enhance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:versions.yours})});
-    const data=await res.json();
-    if(res.ok&&data.prompt){
-      versions.sharp=data.prompt;recordUse();
+  setStatus("Reading your prompt…");
+  const slowTimer=setTimeout(()=>setStatus("Still working — nearly there…"),7000);
+
+  stopSharpen();
+  const ctrl=new AbortController();sharpenAbort=ctrl;
+  let raw="",got=false;
+
+  const show=()=>{
+    versions.sharp=cleanSharpened(raw);
+    if(!got){
+      got=true;clearTimeout(slowTimer);
+      setStatus("Writing your sharpened prompt…");
       document.getElementById('tab-sharp').classList.remove('disabled');
-      showVersion('sharp');maybeShowReview();
-    }else if(res.status===429){showAIError("The AI sharpener is busy right now. Your prompt above is ready to use as it is — try again in a few minutes.");}
-    else{showAIError("Couldn't reach the AI sharpener. Your prompt above is ready to use as it is.");}
-  }catch(e){showAIError("Couldn't reach the AI sharpener — check your connection. Your prompt above is ready to use as it is.");}
+      box.readOnly=true;box.classList.add('streaming');
+      showVersion('sharp');
+    }else if(current==='sharp'){
+      box.value=versions.sharp;fitResult();box.scrollTop=box.scrollHeight;
+    }
+  };
+
+  try{
+    const res=await fetch('/api/enhance',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt:versions.yours}),signal:ctrl.signal});
+    if(!res.ok){
+      if(res.status===429)showAIError("The AI sharpener is busy right now. Your prompt above is ready to use as it is — try again in a few minutes.");
+      else showAIError("Couldn't reach the AI sharpener. Your prompt above is ready to use as it is.");
+    }else{
+      if(res.body&&res.body.getReader){
+        const reader=res.body.getReader(),dec=new TextDecoder();
+        while(true){
+          const {value,done}=await reader.read();
+          if(done)break;
+          raw+=dec.decode(value,{stream:true});
+          if(raw.trim())show();
+        }
+        raw+=dec.decode();
+      }else{
+        raw=await res.text();               // very old browsers: no streaming
+      }
+      if(raw.trim()){
+        show();recordUse();
+        if(current==='sharp'){box.value=versions.sharp;fitResult();box.scrollTop=0;}
+        maybeShowReview();
+      }else{
+        showAIError("Couldn't reach the AI sharpener. Your prompt above is ready to use as it is.");
+      }
+    }
+  }catch(e){
+    if(e.name==='AbortError'){/* user rebuilt the prompt — nothing to report */}
+    else if(got){recordUse();showAIError("The connection dropped before it finished. What came through is shown above, and your original is under \"Your prompt\".");}
+    else showAIError("Couldn't reach the AI sharpener — check your connection. Your prompt above is ready to use as it is.");
+  }
+  clearTimeout(slowTimer);
+  if(sharpenAbort===ctrl)sharpenAbort=null;
+  box.readOnly=false;box.classList.remove('streaming');
+  setStatus("");
   btn.textContent="Sharpen with AI";updateQuotaNote();
 }
 function showAIError(m){const e=document.getElementById('ai-error');e.textContent=m;e.style.display='block';}
@@ -802,6 +917,7 @@ function renderSaved(){
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function loadSaved(i){
   const s=getSaved()[i];if(!s)return;
+  stopSharpen();
   versions.yours=s.p;versions.sharp="";
   document.getElementById('tab-sharp').classList.add('disabled');
   showVersion('yours');
