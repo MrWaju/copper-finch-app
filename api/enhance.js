@@ -118,6 +118,12 @@ export default async function handler(req, res) {
     'Now return only the improved version of the text between those markers.';
 
   let started = false;   // true once any text has been sent to the user
+  const failures = [];    // why each attempt failed, for the Vercel logs
+  const fail = (model, thinking, reason) => {
+    const line = `${model} (thinking ${thinking ? JSON.stringify(thinking) : 'default'}): ${reason}`;
+    failures.push(line);
+    console.error('[sharpen] ' + line);
+  };
 
   for (const model of MODELS) {
     for (const thinking of thinkingOptions(model)) {
@@ -144,11 +150,16 @@ export default async function handler(req, res) {
         );
       } catch (err) {
         clearTimeout(timer);
+        fail(model, thinking, err.name === 'AbortError'
+          ? `no reply within ${FIRST_BYTE_TIMEOUT_MS / 1000}s` : `network error: ${err.message}`);
         break;                 // timeout or network error: move to the next model
       }
 
       if (!response.ok) {
         clearTimeout(timer);
+        let detail = '';
+        try { detail = (await response.json())?.error?.message || ''; } catch {}
+        fail(model, thinking, `HTTP ${response.status} ${detail}`.trim().slice(0, 300));
         if (response.status === 400 && thinking) continue;  // option not accepted: retry without it
         break;                                               // model unavailable: next model
       }
@@ -195,10 +206,13 @@ export default async function handler(req, res) {
         clearTimeout(timer);
         if (started) return res.end();
         // Model replied but with no text at all: try the next model.
+        fail(model, thinking, 'replied with no text');
         break;
       } catch (err) {
         clearTimeout(timer);
         if (started) return res.end();   // stream broke mid-way: the page keeps what arrived
+        fail(model, thinking, err.name === 'AbortError'
+          ? `no text within ${FIRST_BYTE_TIMEOUT_MS / 1000}s` : `stream error: ${err.message}`);
         break;
       }
     }
@@ -206,5 +220,6 @@ export default async function handler(req, res) {
 
   // Every model failed before sending anything. The page handles this
   // gracefully: the user still has their built prompt.
-  return res.status(502).json({ error: 'All models unavailable' });
+  // The reasons appear in Vercel → Logs, and in the browser's Network tab.
+  return res.status(502).json({ error: 'All models unavailable', reasons: failures });
 }
