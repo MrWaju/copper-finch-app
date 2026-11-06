@@ -853,6 +853,7 @@ function buildPrompt(){
   document.getElementById('tab-sharp').classList.add('disabled');
   showVersion('yours');
   document.getElementById('result-container').classList.remove('hidden');
+  fitResult();
   document.getElementById('ai-error').style.display='none';
   document.getElementById('result-container').scrollIntoView({behavior:'smooth',block:'nearest'});
   updateQuotaNote();
@@ -866,18 +867,24 @@ function showVersion(w){
   document.getElementById('tab-sharp').classList.toggle('active',w==='sharp');
   fitResult();
 }
-/* Grow the result box to fit its text (up to a sensible height) */
+/* Grow the result box to fit its text. "Your prompt" always shows in full;
+   the longer Sharpened version is capped and scrolls inside the box. */
 function fitResult(){
   const r=document.getElementById('result');
+  if(!r.offsetParent)return;            // hidden: nothing to measure yet
+  const y=window.scrollY;
   r.style.height='auto';
-  r.style.height=Math.min(Math.max(r.scrollHeight+4,150),560)+'px';
+  const cap=current==='sharp'?560:Infinity;
+  r.style.height=Math.min(Math.max(r.scrollHeight+4,150),cap)+'px';
+  window.scrollTo(0,y);                 // stop the page jumping while it resizes
 }
+window.addEventListener('resize',fitResult);
 /* Add a full stop unless the text already ends with punctuation */
 function endSentence(s){
   s=s.trim();
   return /[.!?…:;]["'’”)]*$/.test(s)?s:s+".";
 }
-document.getElementById('result').addEventListener('input',function(){versions[current]=this.value;});
+document.getElementById('result').addEventListener('input',function(){versions[current]=this.value;if(current==='yours')fitResult();});
 
 /* ---------- sharpen ---------- */
 const LIMIT=10,WINDOW_MS=36e5;
@@ -1035,6 +1042,7 @@ function loadSaved(i){
   document.getElementById('tab-sharp').classList.add('disabled');
   showVersion('yours');
   document.getElementById('result-container').classList.remove('hidden');
+  fitResult();
   document.getElementById('result-container').scrollIntoView({behavior:'smooth'});
 }
 function deleteSaved(i){const a=getSaved();a.splice(i,1);try{localStorage.setItem('cf_saved',JSON.stringify(a));}catch(e){}renderSaved();}
