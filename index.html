@@ -89,17 +89,24 @@
   /* access gate */
   .gate-lead{font-size:15px;line-height:1.6;margin:0 0 16px}
   .gate-lead strong{color:var(--electric-blue)}
-  .gate-lead .gate-tip{color:#FEE86A}
-  .gate-photo{display:block;width:100%;height:auto;border-radius:10px;border:1px solid rgba(148,163,184,.16);margin-bottom:18px}
+  .gate-lead .gate-line{color:#FEE86A}
+  .gate-photo-wrap{position:relative;margin-bottom:18px;border-radius:10px;overflow:hidden;border:1px solid rgba(148,163,184,.16)}
+  .gate-photo{display:block;width:100%;height:auto}
+  .gate-ring{position:absolute;border:3px solid var(--copper);border-radius:10px;box-shadow:0 0 0 999px rgba(8,12,24,.45);transition:all .3s}
+  .gate-ring.pulse{animation:gatepulse 1s ease-in-out 2}
+  @keyframes gatepulse{50%{border-color:#FEE86A;transform:scale(1.04)}}
   .gate-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .gate-tiles button{margin:0;padding:16px 12px;min-height:64px;font-size:15px;font-weight:600;line-height:1.3;
     background:rgba(0,0,0,.28);color:var(--off-white);border:1px solid rgba(148,163,184,.22);border-radius:10px;transition:background .15s,border-color .15s}
   .gate-tiles button:hover{border-color:var(--electric-blue);opacity:1}
   .gate-tiles button.right{background:rgba(52,211,153,.18);border-color:var(--green)}
   .gate-tiles button.wrong{background:rgba(239,68,68,.16);border-color:#EF4444;animation:gateshake .35s}
-  .gate-tiles button:disabled{opacity:.5;cursor:not-allowed}
+  .gate-tiles button:disabled{cursor:not-allowed}
+  .gate-tiles button.wrong:disabled{opacity:.55}
   @keyframes gateshake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
   .gate-msg{min-height:20px;font-size:14px;text-align:center;margin:14px 0 0;line-height:1.5;color:var(--amber)}
+  .gate-msg.blocked{font-size:15px;color:var(--off-white);background:rgba(0,0,0,.28);border:1px solid rgba(148,163,184,.16);border-radius:10px;padding:18px}
+  .gate-msg.blocked strong{display:block;font-size:26px;color:var(--copper);margin-top:8px;font-variant-numeric:tabular-nums}
   .gate-foot{font-size:12px;color:var(--gray-text);text-align:center;margin:6px 0 0}
   @media (max-width:380px){.gate-tiles{grid-template-columns:1fr}}
   .btn-row{display:flex;gap:10px}
@@ -217,17 +224,19 @@
     </div>
   </div>
 
-  <!-- ACCESS GATE: one tap, using a detail printed on the mat -->
+  <!-- ACCESS GATE: one question about a detail printed on the mat -->
   <div id="auth-card" class="box">
     <h2>Unlock the Constructor</h2>
-    <p class="gate-lead">
-      Grab your Copper Finch mat and find the <strong>ROLE (THE PERSONA)</strong> column, top left.
-      What does its <strong class="gate-tip">PRO-TIP</strong> say?
-    </p>
-    <img src="role-hint.jpg" alt="The top-left corner of the mat, with the ROLE (THE PERSONA) heading highlighted" class="gate-photo" width="960" height="587">
-    <div class="gate-tiles" id="gate-tiles" role="group" aria-label="Choose the PRO-TIP printed under ROLE"></div>
+    <div id="gate-ask">
+      <p class="gate-lead" id="gate-lead"></p>
+      <div class="gate-photo-wrap">
+        <img src="mat-hint.jpg" alt="Section 01 of the mat, showing the ROLE, TASK, CONTEXT and FORMAT columns" class="gate-photo" width="1140" height="198">
+        <span class="gate-ring" id="gate-ring"></span>
+      </div>
+      <div class="gate-tiles" id="gate-tiles" role="group" aria-label="Choose the answer printed on your mat"></div>
+    </div>
     <p id="gate-msg" class="gate-msg" aria-live="polite"></p>
-    <p class="gate-foot">One-time check. This device will remember you.</p>
+    <p class="gate-foot" id="gate-foot">One-time check. This device will remember you.</p>
   </div>
 
   <!-- CONSTRUCTOR -->
@@ -727,55 +736,101 @@ function unlock(){
   document.getElementById('saved-box').classList.remove('hidden');
   renderSaved();updateStrength();
 }
-/* The four PRO-TIPs printed on the mat. Only the ROLE one unlocks. */
-const GATE_OPTIONS=[
-  {t:"Niche down",ok:true},
-  {t:"Use precision verbs"},
-  {t:"Paste source data"},
-  {t:"Set hard mathematical limits"}
-];
-const GATE_MAX_TRIES=3,GATE_LOCK_MS=30000;
-let gateWrong=0;
-function gateLockedUntil(){try{return parseInt(localStorage.getItem('cf_gate_lock')||'0',10);}catch(e){return 0;}}
+/* Questions about details printed in Section 01 of the mat. The wrong options
+   are believable, so the answer can't be worked out without the mat. */
+const GATE_COLS={ROLE:[2.5,21.9],TASK:[25.0,24.6],CONTEXT:[50.0,24.6],FORMAT:[75.2,22.9]}; // left %, width % on mat-hint.jpg
+const GATE_QUESTIONS=[
+  {col:"ROLE",line:"PRO-TIP",q:"what job title is given as the example?",
+   a:["Direct-response B2B copywriter","Senior tax accountant","Award-winning UX designer","Fortune 500 CFO"]},
+  {col:"ROLE",line:"OPTIMISED",q:"the assistant specialises in risk mitigation for what?",
+   a:["High-stakes software launches","Global supply chains","Hospital IT systems","Large construction projects"]},
+  {col:"ROLE",line:"ADVANCED COMMAND",q:"instead of a marketer, the AI should act strictly as a…",
+   a:["Forensic auditor","Criminal barrister","Investigative journalist","Quality inspector"]},
+  {col:"TASK",line:"PRO-TIP",q:"which three precision verbs are given?",
+   a:["Extract, Consolidate, Critique","Analyse, Compare, Rank","Draft, Review, Refine","Identify, Prioritise, Explain"]},
+  {col:"TASK",line:"OPTIMISED",q:"extract 3 critical what from the transcript?",
+   a:["Roadblocks","Risks","Deadlines","Opportunities"]},
+  {col:"CONTEXT",line:"OPTIMISED",q:"whose quarterly review is it for?",
+   a:["VP of Engineering","Head of Sales","Chief Financial Officer","Head of Marketing"]},
+  {col:"FORMAT",line:"PRO-TIP",q:"how many words per bullet does the example allow?",
+   a:["15","10","20","25"]},
+  {col:"FORMAT",line:"OPTIMISED",q:"what are the table's 3 columns?",
+   a:["Roadblock, Mitigation Plan, Status","Risk, Owner, Deadline","Issue, Impact, Action","Task, Priority, Due date"]}
+]; // the first answer in each list is the right one; tiles are shuffled on screen
+const GATE_LOCK_MS=10*60*1000;
+const gMem={};  // fallback if the browser blocks storage
+function gGet(k){try{const v=localStorage.getItem(k);return v===null&&k in gMem?gMem[k]:v;}catch(e){return k in gMem?gMem[k]:null;}}
+function gSet(k,v){if(v===null)delete gMem[k];else gMem[k]=String(v);try{if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,String(v));}catch(e){}}
+function gateQ(){
+  let i=parseInt(gGet('cf_gate_q'),10);
+  if(isNaN(i)||!GATE_QUESTIONS[i]){i=Math.floor(Math.random()*GATE_QUESTIONS.length);gSet('cf_gate_q',i);}
+  return i;
+}
+function gateNewQ(){
+  const cur=gateQ();let i=cur;
+  while(i===cur)i=Math.floor(Math.random()*GATE_QUESTIONS.length);
+  gSet('cf_gate_q',i);gSet('cf_gate_bad',null);
+}
 function renderGate(){
-  const wrap=document.getElementById('gate-tiles');
-  const opts=GATE_OPTIONS.slice().sort(()=>Math.random()-.5);
-  wrap.innerHTML="";
-  opts.forEach(o=>{
+  const until=parseInt(gGet('cf_gate_lock')||'0',10);
+  if(until>Date.now()){gateBlocked(until);return;}
+  if(until){gSet('cf_gate_lock',null);}
+  document.getElementById('gate-ask').classList.remove('hidden');
+  document.getElementById('gate-foot').classList.remove('hidden');
+  const msg=document.getElementById('gate-msg');msg.className='gate-msg';msg.textContent="";
+  const Q=GATE_QUESTIONS[gateQ()];
+  document.getElementById('gate-lead').innerHTML=
+    'Grab your Copper Finch mat and find the <strong>'+Q.col+'</strong> column (highlighted below). '+
+    'In its <strong class="gate-line">'+Q.line+'</strong> section, '+Q.q;
+  const ring=document.getElementById('gate-ring'),c=GATE_COLS[Q.col];
+  ring.style.left=c[0]+'%';ring.style.width=c[1]+'%';ring.style.top='56%';ring.style.height='42%';
+  const bad=gGet('cf_gate_bad');
+  const wrap=document.getElementById('gate-tiles');wrap.innerHTML="";
+  Q.a.map((t,i)=>({t,ok:i===0})).sort(()=>Math.random()-.5).forEach(o=>{
     const b=document.createElement('button');b.type='button';b.textContent=o.t;
-    b.onclick=()=>gatePick(b,!!o.ok);wrap.appendChild(b);
+    if(bad===o.t){b.classList.add('wrong');b.disabled=true;}
+    b.onclick=()=>gatePick(b,o.ok,Q);wrap.appendChild(b);
   });
-  gateCheckLock();
+  if(bad)gateSecondChanceMsg(Q);
 }
-function gateSetDisabled(v){document.querySelectorAll('#gate-tiles button').forEach(b=>b.disabled=v);}
-function gateCheckLock(){
-  const left=gateLockedUntil()-Date.now(),msg=document.getElementById('gate-msg');
-  if(left>0){
-    gateSetDisabled(true);
-    msg.textContent="Too many tries. Have a look at the ROLE column on your mat and try again in "+Math.ceil(left/1000)+" seconds.";
-    setTimeout(gateCheckLock,1000);
-  }else if(document.querySelector('#gate-tiles button:disabled')){
-    gateSetDisabled(false);msg.textContent="";
-  }
+function gateSecondChanceMsg(Q){
+  document.getElementById('gate-msg').textContent="Not quite. One more go: check the "+Q.line+" section in the "+Q.col+" column.";
 }
-function gatePick(btn,ok){
+function gatePick(btn,ok,Q){
   const msg=document.getElementById('gate-msg');
   if(ok){
-    btn.classList.add('right');gateSetDisabled(true);
-    msg.style.color='var(--green)';msg.textContent="That's it. Opening the Constructor…";
-    try{localStorage.setItem('cf_unlocked','1');localStorage.removeItem('cf_gate_lock');}catch(e){}
+    btn.classList.add('right');
+    document.querySelectorAll('#gate-tiles button').forEach(b=>b.disabled=true);
+    msg.className='gate-msg';msg.style.color='var(--green)';msg.textContent="That's it. Opening the Constructor…";
+    gSet('cf_unlocked','1');['cf_gate_lock','cf_gate_bad','cf_gate_q'].forEach(k=>gSet(k,null));
     setTimeout(unlock,500);
     return;
   }
-  gateWrong++;
-  btn.classList.remove('wrong');void btn.offsetWidth;btn.classList.add('wrong');
-  if(gateWrong>=GATE_MAX_TRIES){
-    gateWrong=0;
-    try{localStorage.setItem('cf_gate_lock',String(Date.now()+GATE_LOCK_MS));}catch(e){}
-    gateCheckLock();
-  }else{
-    msg.textContent="Not quite. That PRO-TIP is from another column. Look further down the ROLE column.";
+  if(!gGet('cf_gate_bad')){                       // first wrong answer: one more go
+    gSet('cf_gate_bad',btn.textContent);
+    btn.classList.add('wrong');btn.disabled=true;
+    gateSecondChanceMsg(Q);
+    const ring=document.getElementById('gate-ring');ring.classList.remove('pulse');void ring.offsetWidth;ring.classList.add('pulse');
+    return;
   }
+  btn.classList.add('wrong');                     // second wrong answer: pause for 10 minutes
+  const until=Date.now()+GATE_LOCK_MS;
+  gSet('cf_gate_lock',until);gateNewQ();
+  setTimeout(()=>gateBlocked(until),450);
+}
+let gateTimer=null;
+function gateBlocked(until){
+  document.getElementById('gate-ask').classList.add('hidden');
+  document.getElementById('gate-foot').classList.add('hidden');
+  const msg=document.getElementById('gate-msg');msg.className='gate-msg blocked';msg.style.color='';
+  const tick=()=>{
+    const left=until-Date.now();
+    if(left<=0){clearInterval(gateTimer);gateTimer=null;renderGate();return;}
+    const m=Math.floor(left/60000),sec=Math.floor(left%60000/1000);
+    msg.innerHTML="For security, the Constructor is paused. Have your mat to hand and try again in"+
+      "<strong>"+m+":"+String(sec).padStart(2,"0")+"</strong>";
+  };
+  clearInterval(gateTimer);tick();gateTimer=setInterval(tick,1000);
 }
 renderGate();
 try{if(localStorage.getItem('cf_unlocked')==='1'&&location.hash.indexOf('#p=')!==0)unlock();}catch(e){}
