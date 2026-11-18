@@ -179,7 +179,7 @@
   }
   .mini:hover{color:var(--off-white);opacity:1}
   .empty{font-size:13px;color:var(--gray-text);font-style:italic}
-  .review-strip{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 10px;margin-top:18px;
+  .review-strip{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 10px;margin:16px 0 14px;
     padding:12px 14px;border-radius:10px;background:rgba(198,121,77,.08);border:1px solid rgba(198,121,77,.28);
     font-size:13.5px;color:var(--gray-text);text-align:center;line-height:1.5}
   .review-strip .rs-stars{color:var(--copper);font-size:15px}
@@ -335,6 +335,11 @@
       </p>
       <p id="ai-error"></p>
 
+      <div class="review-strip">
+        <span class="rs-stars" aria-hidden="true">&#9733;</span>
+        <span>Finding the mat useful? An honest review helps others decide.</span>
+        <a href="https://www.amazon.co.uk/review/create-review?asin=B0H4RM32S1" target="_blank" rel="noopener">Review on Amazon &rarr;</a>
+      </div>
       <button onclick="copyPrompt()">Copy prompt</button>
       <p id="copy-confirm">Copied. Now paste it into your AI chat (Ctrl+V, or &#8984;V on Mac).</p>
 
@@ -348,12 +353,6 @@
         <a href="https://chatgpt.com" target="_blank" rel="noopener" onclick="copyPrompt()">ChatGPT</a>
         <a href="https://claude.ai/new" target="_blank" rel="noopener" onclick="copyPrompt()">Claude</a>
         <a href="https://gemini.google.com/app" target="_blank" rel="noopener" onclick="copyPrompt()">Gemini</a>
-      </div>
-
-      <div class="review-strip">
-        <span class="rs-stars" aria-hidden="true">&#9733;</span>
-        <span>Finding the mat useful? An honest review helps others decide.</span>
-        <a href="https://www.amazon.co.uk/review/create-review?asin=B0H4RM32S1" target="_blank" rel="noopener">Review on Amazon &rarr;</a>
       </div>
 
     </div>
